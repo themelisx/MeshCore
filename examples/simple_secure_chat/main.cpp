@@ -241,8 +241,10 @@ protected:
   }
 
   void onCommandDataRecv(const ContactInfo& from, mesh::Packet* pkt, uint32_t sender_timestamp, const char *text) override {
+    MESH_DEBUG_PRINTLN("onCommandDataRecv");
   }
   void onSignedMessageRecv(const ContactInfo& from, mesh::Packet* pkt, uint32_t sender_timestamp, const uint8_t *sender_prefix, const char *text) override {
+    MESH_DEBUG_PRINTLN("onSignedMessageRecv");
   }
 
   void onChannelMessageRecv(const mesh::GroupChannel& channel, mesh::Packet* pkt, uint32_t timestamp, const char *text) override {
@@ -255,10 +257,12 @@ protected:
   }
 
   uint8_t onContactRequest(const ContactInfo& contact, uint32_t sender_timestamp, const uint8_t* data, uint8_t len, uint8_t* reply) override {
+    MESH_DEBUG_PRINTLN("onContactRequest");
     return 0;  // unknown
   }
 
   void onContactResponse(const ContactInfo& contact, const uint8_t* data, uint8_t len) override {
+    MESH_DEBUG_PRINTLN("onContactResponse");
     // not supported
   }
 
