@@ -2,9 +2,13 @@
 #define TASKS_h
 
 #include <Arduino.h>
+#include "defines.h"
+#include "vars.h"
 
-#ifdef USE_MULTI_THREAD
-void tft_task(void *pvParameters);
+void lvgl_task(void *pvParameters);
+//void clock_task(void *pvParameters);
+#ifdef USE_OPEN_WEATHER
+void openWeather_task(void *pvParameters);
 #endif
 
 #endif

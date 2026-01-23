@@ -4,7 +4,6 @@
 #include <Arduino.h>
 
 #include "structs.h"
-#include "mySwitches.h"
 
 #ifdef USE_MULTI_THREAD
     extern SemaphoreHandle_t semaphoreData;
@@ -18,7 +17,5 @@
         extern lv_obj_t * ui_MainTabView;
     #endif
 #endif
-
-extern MySwitches *mySwitches;
 
 #endif

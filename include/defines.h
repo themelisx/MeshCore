@@ -4,6 +4,7 @@
 #include "configuration.h"
 
 #define BUTTONS_ON_SCREEN 7
+#define DELAY_LVGL_TASK 10
 
 #define STATE_OFF HIGH
 #define STATE_ON LOW
