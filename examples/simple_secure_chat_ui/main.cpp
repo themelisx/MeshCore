@@ -988,6 +988,7 @@ void setup() {
   initializeUI();
   
   createTasks();
+  lv_timer_handler();
 
   initializeMesh();
 

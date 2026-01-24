@@ -31,7 +31,7 @@ void createTasks() {
     NULL,           // Parameter of the task
     4,              // Priority of the task
     &t_core1_core,  // Task handle to keep track of created task
-    0);             // Pin task to core 0
+    1);             // Pin task to core 1
 
   xTaskCreatePinnedToCore(
     clock_task,       // Task function.

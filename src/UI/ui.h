@@ -42,34 +42,10 @@ void ui_event_AutoLight(lv_event_t * e);
 extern lv_obj_t * ui_AutoLight;
 extern lv_obj_t * ui____initial_actions0;
 
-
 extern lv_obj_t * ui_DimOverlay;
-extern lv_obj_t * ui_TabPageWeather;
-extern lv_obj_t * ui_Container1;
-extern lv_obj_t * ui_Label1;
-extern lv_obj_t * ui_ValueTemperature;
-extern lv_obj_t * ui_Panel1;
-extern lv_obj_t * ui_Label3;
-extern lv_obj_t * ui_ValueFeelsLike;
-extern lv_obj_t * ui_Panel4;
-extern lv_obj_t * ui_Label4;
-extern lv_obj_t * ui_ValueSunrise;
-extern lv_obj_t * ui_Label5;
-extern lv_obj_t * ui_ValueSunset;
-extern lv_obj_t * ui_Container2;
-extern lv_obj_t * ui_Humidity;
-extern lv_obj_t * ui_ValueHumidity;
-extern lv_obj_t * ui_Panel3;
-extern lv_obj_t * ui_Pressure;
-extern lv_obj_t * ui_ValuePressure;
-extern lv_obj_t * ui_Panel2;
-extern lv_obj_t * ui_Label2;
-extern lv_obj_t * ui_ValueWindSpeed;
-extern lv_obj_t * ui_ValueWindDirection;
-extern lv_obj_t * ui_Image1;
+extern lv_obj_t * ui_TabPageHome;
 extern lv_obj_t * ui_ValueDate;
 extern lv_obj_t * ui_ValueTime;
-extern lv_obj_t * ui_ValueLastUpdate;
 extern lv_obj_t * ui_TabPageSettings;
 extern lv_obj_t * ui_DayLight;
 
