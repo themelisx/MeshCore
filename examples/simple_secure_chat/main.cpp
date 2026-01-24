@@ -42,381 +42,12 @@
 
 #include <helpers/BaseChatMesh.h>
 
-
-#include <lvgl.h>
-#include <Wire.h>
-#include <Adafruit_SSD1306.h> 
-#include <Adafruit_GFX.h>
-
-#include "UI/ui.h"
-#include "../src/fonts/fonts.h"
-#include "../lvgl/lvgl.h"
-
-#include "../include/externals.h"
-#include "../include/lgfx.h"
-#include "../include/defines.h"
-#include "../include/structs.h"
-#include "../include/uiManager.h"
-#ifdef USE_MULTI_THREAD
-  #include "../include/tasks.h"
-#endif
-
-#include "touch.h"
-
 #define SEND_TIMEOUT_BASE_MILLIS          500
 #define FLOOD_SEND_TIMEOUT_FACTOR         16.0f
 #define DIRECT_SEND_PERHOP_FACTOR         6.0f
 #define DIRECT_SEND_PERHOP_EXTRA_MILLIS   250
 
 #define  PUBLIC_GROUP_PSK  "izOH6cXN6mrJ5e26oRXNcg=="
-
-#define MAX_CHAT_MESSAGES 50
-
-static lv_obj_t *chat_items[MAX_CHAT_MESSAGES];
-static int chat_count = 0;
-
-static uint32_t screenWidth;
-static uint32_t screenHeight;
-static lv_disp_draw_buf_t draw_buf;
-static lv_color_t disp_draw_buf[800 * 480 / 10];
-//static lv_color_t disp_draw_buf;
-static lv_disp_drv_t disp_drv;
-
-s_espNow espNowPacket;
-UIManager *uiManager;
-
-#ifdef USE_MULTI_THREAD
-  // Tasks
-  #ifdef DISPLAY_AT_CORE1
-    TaskHandle_t t_core1_tft;
-  #endif
-
-  // Semaphores
-  SemaphoreHandle_t semaphoreData;
-#endif
-
-TwoWire I2Cone = TwoWire(0);
-Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &I2Cone, OLED_RESET);
-
-SPIClass& spi = SPI;
-uint16_t touchCalibration_x0 = 300, touchCalibration_x1 = 3600, touchCalibration_y0 = 300, touchCalibration_y1 = 3600;
-uint8_t  touchCalibration_rotate = 1, touchCalibration_invert_x = 2, touchCalibration_invert_y = 0;
-
-void format_time(uint32_t ts, char *buf, size_t len)
-{
-    time_t t = ts;
-    struct tm *tm_info = localtime(&t);
-    strftime(buf, len, "%H:%M:%S", tm_info);
-}
-
-void parse_group_message(const char *input,
-                         char *sender_out, size_t sender_len,
-                         char *msg_out, size_t msg_len)
-{
-    const char *sep = strchr(input, ':');
-
-    if (!sep) {
-        strncpy(sender_out, "Unknown", sender_len);
-        strncpy(msg_out, input, msg_len);
-        return;
-    }
-
-    size_t name_len = sep - input;
-    if (name_len >= sender_len) name_len = sender_len - 1;
-
-    strncpy(sender_out, input, name_len);
-    sender_out[name_len] = 0;
-
-    // Skip ": "
-    const char *msg_start = sep + 1;
-    if (*msg_start == ' ') msg_start++;
-
-    strncpy(msg_out, msg_start, msg_len);
-}
-
-void add_chat_bubble(lv_obj_t *list,
-                     const char *time_str,
-                     const char *sender,
-                     const char *msg,
-                     bool is_self)
-{
-    // Remove oldest
-    if (chat_count >= MAX_CHAT_MESSAGES) {
-        lv_obj_del(chat_items[0]);
-        memmove(&chat_items[0], &chat_items[1], sizeof(lv_obj_t*) * (MAX_CHAT_MESSAGES - 1));
-        chat_count--;
-    }
-
-    // Row container (align bubble left/right)
-    lv_obj_t *row = lv_obj_create(list);
-    lv_obj_set_width(row, lv_pct(100));
-    lv_obj_set_height(row, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(row, 0, 0);
-    lv_obj_set_style_pad_all(row, 0, 0);
-    lv_obj_set_style_border_width(row, 0, 0);
-    lv_obj_set_style_outline_width(row, 0, 0);
-    lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row,
-        is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START);
-
-    // Bubble container (COLUMN)
-    lv_obj_t *bubble = lv_obj_create(row);
-    lv_obj_set_width(bubble, lv_pct(85));
-    lv_obj_set_height(bubble, LV_SIZE_CONTENT);
-    lv_obj_set_style_radius(bubble, 12, 0);
-    lv_obj_set_style_pad_all(bubble, 10, 0);    
-    lv_obj_set_style_bg_color(bubble,
-        is_self ? lv_color_hex(0x1E88E5) : lv_color_hex(0x2C2C2C), 0);
-
-    // IMPORTANT: vertical layout inside bubble
-    lv_obj_set_flex_flow(bubble, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(bubble,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START);
-
-    // Header row (sender + time)
-    lv_obj_t *hdr = lv_obj_create(bubble);
-    lv_obj_set_width(hdr, lv_pct(100));
-    lv_obj_set_height(hdr, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(hdr, 0, 0);
-    lv_obj_set_style_border_width(hdr, 0, 0);
-    lv_obj_set_style_pad_all(hdr, 0, 0);
-    lv_obj_set_style_outline_width(hdr, 0, 0);
-
-    lv_obj_set_flex_flow(hdr, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(hdr,
-        LV_FLEX_ALIGN_SPACE_BETWEEN,
-        LV_FLEX_ALIGN_START, //LV_FLEX_ALIGN_CENTER, // Ευθυγράμμιση ονόματος/ώρας στον κάθετο άξονα
-        LV_FLEX_ALIGN_START);
-
-    lv_obj_t *lbl_sender = lv_label_create(hdr);
-    lv_label_set_text(lbl_sender, sender);
-    lv_obj_set_style_text_color(lbl_sender,
-        is_self ? lv_color_hex(0xE3F2FD) : lv_color_hex(0x90CAF9), 0);
-    lv_obj_set_style_text_font(lbl_sender, &lv_font_arial_22, 0);
-
-    lv_obj_t *lbl_time = lv_label_create(hdr);
-    lv_label_set_text(lbl_time, time_str);
-    lv_obj_set_style_text_color(lbl_time, lv_color_hex(0xB0B0B0), 0);
-    lv_obj_set_style_text_font(lbl_time, &lv_font_arial_20, 0);
-
-    // Message body (below header)
-    lv_obj_t *lbl_msg = lv_label_create(bubble);
-    lv_label_set_text(lbl_msg, msg);
-    lv_label_set_long_mode(lbl_msg, LV_LABEL_LONG_WRAP);
-    lv_obj_set_width(lbl_msg, lv_pct(100));
-
-    lv_obj_set_style_text_color(lbl_msg, lv_color_hex(0xFFFFFF), 0);
-    lv_obj_set_style_text_font(lbl_msg, &lv_font_arial_26, 0);
-
-    // Spacing between header and text
-    //lv_obj_set_style_margin_top(lbl_msg, 6, 0);
-    lv_obj_set_style_pad_row(bubble, 6, 0);
-
-    chat_items[chat_count++] = row;
-
-    lv_obj_scroll_to_view(row, LV_ANIM_ON);
-}
-
-void add_private_chat_bubble(lv_obj_t *list, const char *time_str, const char *msg, bool is_self) {
-    
-    lv_obj_set_style_pad_bottom(list, 20, 0);
-
-    // 1. Row container
-    lv_obj_t *row = lv_obj_create(list);
-    lv_obj_set_width(row, lv_pct(100));
-    lv_obj_set_height(row, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(row, 0, 0);
-    lv_obj_set_style_border_width(row, 0, 0);
-    lv_obj_set_style_pad_all(row, 4, 0);
-    lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
-
-    lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-    lv_obj_set_flex_align(row, 
-        is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START, 
-        LV_FLEX_ALIGN_START, 
-        LV_FLEX_ALIGN_START);
-
-    // 2. Aligner (Column) - Κρατάει το Label και την Ώρα
-    lv_obj_t *aligner = lv_obj_create(row);
-    lv_obj_set_width(aligner, LV_SIZE_CONTENT);
-    lv_obj_set_height(aligner, LV_SIZE_CONTENT);
-    lv_obj_set_style_bg_opa(aligner, 0, 0);
-    lv_obj_set_style_border_width(aligner, 0, 0);
-    lv_obj_set_style_pad_all(aligner, 0, 0);
-    lv_obj_set_flex_flow(aligner, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_flex_align(aligner, 
-        is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START, 
-        LV_FLEX_ALIGN_START, 
-        LV_FLEX_ALIGN_START);
-    lv_obj_set_style_pad_row(aligner, 4, 0);
-
-    // 3. Το Label-Bubble (Ενοποιημένο)
-    lv_obj_t *lbl_msg = lv_label_create(aligner);
-
-    // Long mode για wrap
-    lv_label_set_long_mode(lbl_msg, LV_LABEL_LONG_WRAP);
-    lv_label_set_text(lbl_msg, msg);
-    lv_obj_set_style_text_font(lbl_msg, &lv_font_arial_22, 0);
-
-    // Fixed max width για wrap
-    lv_obj_set_width(lbl_msg, 400);           // max πλάτος
-    lv_obj_set_height(lbl_msg, LV_SIZE_CONTENT);  // αυτόματο ύψος
-
-    // Bubble style
-    lv_obj_set_style_bg_opa(lbl_msg, LV_OPA_COVER, 0);
-    lv_obj_set_style_radius(lbl_msg, 12, 0);
-    lv_obj_set_style_pad_all(lbl_msg, 12, 0);
-
-    if(is_self) {
-        lv_obj_set_style_bg_color(lbl_msg, lv_color_hex(0x1E88E5), 0);
-        lv_obj_set_style_text_color(lbl_msg, lv_color_hex(0xFFFFFF), 0);
-    } else {
-        lv_obj_set_style_bg_color(lbl_msg, lv_color_hex(0xFFFFFF), 0);
-        lv_obj_set_style_text_color(lbl_msg, lv_color_hex(0x000000), 0);
-    }
-
-    // 4. Η Ώρα
-    lv_obj_t *lbl_time = lv_label_create(aligner);
-    lv_label_set_text(lbl_time, time_str);
-    lv_obj_set_style_text_color(lbl_time, lv_color_hex(0x808080), 0);
-    lv_obj_set_style_text_font(lbl_time, &lv_font_arial_14, 0);
-
-    lv_obj_scroll_to_view(row, LV_ANIM_ON);
-  }
-
-// Elecrow Display callbacks
-
-/* Display flushing */
-void my_disp_flush(lv_disp_drv_t *disp, const lv_area_t *area, lv_color_t *color_p)
-{
-  uint32_t w = (area->x2 - area->x1 + 1);
-  uint32_t h = (area->y2 - area->y1 + 1);  
-
-  //lcd.fillScreen(TFT_WHITE);
-#if (LV_COLOR_16_SWAP != 0)
- lcd.pushImageDMA(area->x1, area->y1, w, h,(lgfx::rgb565_t*)&color_p->full);
-#else
-  lcd.pushImageDMA(area->x1, area->y1, w, h,(lgfx::rgb565_t*)&color_p->full);//
-#endif
-
-  lv_disp_flush_ready(disp);
-
-}
-
-void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
-{
-  if (touch_has_signal())
-  {
-    if (touch_touched())
-    {
-      data->state = LV_INDEV_STATE_PR;
-
-      /*Set the coordinates*/
-      data->point.x = touch_last_x;
-      data->point.y = touch_last_y;
-      // #ifndef MODE_RELEASE
-      //   Serial.printf("Data x: %d, Data y: %d", touch_last_x, touch_last_y);
-      //   Serial.println();
-      // #endif
-    }
-    else if (touch_released())
-    {
-      data->state = LV_INDEV_STATE_REL;
-    }
-  }
-  else
-  {
-    data->state = LV_INDEV_STATE_REL;
-  }
-  delay(15);
-}
-
-void initializeUI() {  
-
-  Serial.println("initialize UI...");  
-  ui_init();
-  //ui_init_screen_events();
-
-  /*
-  #ifdef ENABLE_STARTUP_LOGO
-  lv_disp_load_scr(ui_ScreenLogo);  
-  for( int i=0; i < 100; i++ ){
-      lv_task_handler();  
-      delay(10);
-  }
-  lv_scr_load_anim(ui_Screen1, LV_SCR_LOAD_ANIM_MOVE_TOP, 500, 0, true);
-  #else
-  ui_init();
-  #endif
-  */
-  uiManager = new UIManager();
-  
-}
-void configureDisplay() {
-  Serial.println("Configuring display...");
-
-  screenWidth = lcd.width();
-  screenHeight = lcd.height();
-
-  lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, NULL, screenWidth * screenHeight / 10);
-
-  /* Initialize the display */
-  lv_disp_drv_init(&disp_drv);
-  /* Change the following line to your display resolution */
-  disp_drv.hor_res = screenWidth;
-  disp_drv.ver_res = screenHeight;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.draw_buf = &draw_buf;
-  lv_disp_drv_register(&disp_drv);
-
-  /* Initialize the (dummy) input device driver */
-  static lv_indev_drv_t indev_drv;
-  lv_indev_drv_init(&indev_drv);
-  indev_drv.type = LV_INDEV_TYPE_POINTER;
-  indev_drv.read_cb = my_touchpad_read;
-  lv_indev_drv_register(&indev_drv);
-#ifdef TFT_BL
-  pinMode(TFT_BL, OUTPUT);
-  digitalWrite(TFT_BL, HIGH);
-#endif
-
-  lcd.fillScreen(0x000000u);
-}
-
-void onWaitRelayPressed(bool pressed) {
-  //mySettings->writeBool(PREF_WAIT_RELAY, pressed);
-}
-
-void initializeDisplay() {
-  Serial.println("Initializing display...");
-  lcd.begin();
-  lcd.fillScreen(0x000000u);
-  lcd.setTextSize(2); 
-  //lcd.setBrightness(127);
-}
-
-void initializeTouchScreen() {
-  Serial.println("Initializing touch screen...");
-  touch_init();
-}
-
-void initializeLVGL() {
-  Serial.println("Initializing LVGL...");
-  lv_init();
-}
-
-void createSemaphores() {
-#ifdef USE_MULTI_THREAD
-  semaphoreData = xSemaphoreCreateMutex();
-  xSemaphoreGive(semaphoreData);
-#endif
-}
 
 // Believe it or not, this std C function is busted on some platforms!
 static uint32_t _atoi(const char* sp) {
@@ -607,20 +238,11 @@ protected:
     if (strcmp(text, "clock sync") == 0) {  // special text command
       setClock(sender_timestamp + 1);
     }
-
-    char time_buf[16];
-    format_time(sender_timestamp, time_buf, sizeof(time_buf));
-
-    bool is_self = (strcmp(from.name, _prefs.node_name) == 0);
-
-    add_private_chat_bubble(ui_ContactMessages, time_buf, text, is_self);
   }
 
   void onCommandDataRecv(const ContactInfo& from, mesh::Packet* pkt, uint32_t sender_timestamp, const char *text) override {
-    MESH_DEBUG_PRINTLN("onCommandDataRecv");
   }
   void onSignedMessageRecv(const ContactInfo& from, mesh::Packet* pkt, uint32_t sender_timestamp, const uint8_t *sender_prefix, const char *text) override {
-    MESH_DEBUG_PRINTLN("onSignedMessageRecv");
   }
 
   void onChannelMessageRecv(const mesh::GroupChannel& channel, mesh::Packet* pkt, uint32_t timestamp, const char *text) override {
@@ -630,34 +252,13 @@ protected:
       Serial.printf("PUBLIC CHANNEL MSG -> (Flood) hops %d\n", pkt->path_len);
     }
     Serial.printf("   %s\n", text);
-
-    // Μόνο public
-    // if (strcmp(channel.secret, PUBLIC_GROUP_PSK) != 0)
-    //      return;
-
-    if (pkt->getPayloadType() != PAYLOAD_TYPE_GRP_TXT)
-        return;
-
-    char time_buf[16];
-    format_time(timestamp, time_buf, sizeof(time_buf));
-
-    char sender[32];
-    char msg[192];
-
-    parse_group_message(text, sender, sizeof(sender), msg, sizeof(msg));
-
-    bool is_self = (strcmp(sender, _prefs.node_name) == 0);
-
-    add_chat_bubble(ui_ChannelMessages, time_buf, sender, msg, is_self);
   }
 
   uint8_t onContactRequest(const ContactInfo& contact, uint32_t sender_timestamp, const uint8_t* data, uint8_t len, uint8_t* reply) override {
-    MESH_DEBUG_PRINTLN("onContactRequest");
     return 0;  // unknown
   }
 
   void onContactResponse(const ContactInfo& contact, const uint8_t* data, uint8_t len) override {
-    MESH_DEBUG_PRINTLN("onContactResponse");
     // not supported
   }
 
@@ -982,28 +583,9 @@ void setup() {
 
   // send out initial Advertisement to the mesh
   the_mesh.sendSelfAdvert(1200);   // add slight delay
-
-  initializeDisplay();
-  delay(200);
-
-  initializeLVGL();
-  initializeTouchScreen();
-  configureDisplay();
-
-  createSemaphores();  
-
-  initializeUI();
-  createTasks();
-
-  Serial.println("Setup completed");
 }
 
 void loop() {
   the_mesh.loop();
   rtc_clock.tick();
 }
-
-
-// void loop() {
-//    vTaskDelete(NULL);
-// }
