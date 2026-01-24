@@ -27,7 +27,7 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_text_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0xFFFFFF),
                                 LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_text_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_ITEMS | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_montserrat_18,
+    lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_arial_18,
                                LV_PART_ITEMS | LV_STATE_DEFAULT);
 
     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");

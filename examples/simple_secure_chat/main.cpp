@@ -49,6 +49,7 @@
 #include <Adafruit_GFX.h>
 
 #include "UI/ui.h"
+#include "../src/fonts/fonts.h"
 #include "../lvgl/lvgl.h"
 
 #include "../include/externals.h"
@@ -197,12 +198,12 @@ void add_chat_bubble(lv_obj_t *list,
     lv_label_set_text(lbl_sender, sender);
     lv_obj_set_style_text_color(lbl_sender,
         is_self ? lv_color_hex(0xE3F2FD) : lv_color_hex(0x90CAF9), 0);
-    lv_obj_set_style_text_font(lbl_sender, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(lbl_sender, &lv_font_arial_22, 0);
 
     lv_obj_t *lbl_time = lv_label_create(hdr);
     lv_label_set_text(lbl_time, time_str);
     lv_obj_set_style_text_color(lbl_time, lv_color_hex(0xB0B0B0), 0);
-    lv_obj_set_style_text_font(lbl_time, &lv_font_montserrat_20, 0);
+    lv_obj_set_style_text_font(lbl_time, &lv_font_arial_20, 0);
 
     // Message body (below header)
     lv_obj_t *lbl_msg = lv_label_create(bubble);
@@ -211,7 +212,7 @@ void add_chat_bubble(lv_obj_t *list,
     lv_obj_set_width(lbl_msg, lv_pct(100));
 
     lv_obj_set_style_text_color(lbl_msg, lv_color_hex(0xFFFFFF), 0);
-    lv_obj_set_style_text_font(lbl_msg, &lv_font_montserrat_26, 0);
+    lv_obj_set_style_text_font(lbl_msg, &lv_font_arial_26, 0);
 
     // Spacing between header and text
     //lv_obj_set_style_margin_top(lbl_msg, 6, 0);
@@ -261,7 +262,7 @@ void add_private_chat_bubble(lv_obj_t *list, const char *time_str, const char *m
     // Long mode για wrap
     lv_label_set_long_mode(lbl_msg, LV_LABEL_LONG_WRAP);
     lv_label_set_text(lbl_msg, msg);
-    lv_obj_set_style_text_font(lbl_msg, &lv_font_montserrat_22, 0);
+    lv_obj_set_style_text_font(lbl_msg, &lv_font_arial_22, 0);
 
     // Fixed max width για wrap
     lv_obj_set_width(lbl_msg, 400);           // max πλάτος
@@ -284,7 +285,7 @@ void add_private_chat_bubble(lv_obj_t *list, const char *time_str, const char *m
     lv_obj_t *lbl_time = lv_label_create(aligner);
     lv_label_set_text(lbl_time, time_str);
     lv_obj_set_style_text_color(lbl_time, lv_color_hex(0x808080), 0);
-    lv_obj_set_style_text_font(lbl_time, &lv_font_montserrat_14, 0);
+    lv_obj_set_style_text_font(lbl_time, &lv_font_arial_14, 0);
 
     lv_obj_scroll_to_view(row, LV_ANIM_ON);
   }
