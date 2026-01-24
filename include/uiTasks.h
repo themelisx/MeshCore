@@ -6,9 +6,7 @@
 #include "uiVars.h"
 
 void lvgl_task(void *pvParameters);
-//void clock_task(void *pvParameters);
-#ifdef USE_OPEN_WEATHER
-    void openWeather_task(void *pvParameters);
-#endif
+void clock_task(void *pvParameters);
+void core_task(void *pvParameters);
 
 #endif

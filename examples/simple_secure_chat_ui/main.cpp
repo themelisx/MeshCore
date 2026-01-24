@@ -42,7 +42,7 @@
 
 #include <helpers/BaseChatMesh.h>
 
-
+#include "esp_log.h"
 #include <lvgl.h>
 #include <Wire.h>
 #include <Adafruit_SSD1306.h> 
@@ -58,6 +58,8 @@
 #include "../include/uiManager.h"
 #include "../include/uiTasks.h"
 #include "uiTouch.h"
+
+#define TAG "main"
 
 #define SEND_TIMEOUT_BASE_MILLIS          500
 #define FLOOD_SEND_TIMEOUT_FACTOR         16.0f
@@ -79,6 +81,7 @@ static lv_color_t disp_draw_buf[800 * 480 / 10];
 static lv_disp_drv_t disp_drv;
 
 UIManager *uiManager;
+
 SemaphoreHandle_t semaphoreData;
 
 TwoWire I2Cone = TwoWire(0);
@@ -93,6 +96,10 @@ void format_time(uint32_t ts, char *buf, size_t len)
     time_t t = ts;
     struct tm *tm_info = localtime(&t);
     strftime(buf, len, "%H:%M:%S", tm_info);
+}
+
+void onDayLightPressed(bool pressed) {
+  //mySettings->writeBool(PREF_DAYLIGHT, pressed);
 }
 
 void parse_group_message(const char *input,
@@ -327,6 +334,7 @@ void initializeUI() {
 
   Serial.println("initialize UI...");  
   ui_init();
+  setNightMode(false);
   //ui_init_screen_events();
 
   /*
@@ -343,58 +351,6 @@ void initializeUI() {
   */
   uiManager = new UIManager();
   
-}
-void configureDisplay() {
-  Serial.println("Configuring display...");
-
-  screenWidth = lcd.width();
-  screenHeight = lcd.height();
-
-  lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, NULL, screenWidth * screenHeight / 10);
-
-  /* Initialize the display */
-  lv_disp_drv_init(&disp_drv);
-  /* Change the following line to your display resolution */
-  disp_drv.hor_res = screenWidth;
-  disp_drv.ver_res = screenHeight;
-  disp_drv.flush_cb = my_disp_flush;
-  disp_drv.draw_buf = &draw_buf;
-  lv_disp_drv_register(&disp_drv);
-
-  /* Initialize the (dummy) input device driver */
-  static lv_indev_drv_t indev_drv;
-  lv_indev_drv_init(&indev_drv);
-  indev_drv.type = LV_INDEV_TYPE_POINTER;
-  indev_drv.read_cb = my_touchpad_read;
-  lv_indev_drv_register(&indev_drv);
-#ifdef TFT_BL
-  pinMode(TFT_BL, OUTPUT);
-  digitalWrite(TFT_BL, HIGH);
-#endif
-
-  lcd.fillScreen(0x000000u);
-}
-
-void onWaitRelayPressed(bool pressed) {
-  //mySettings->writeBool(PREF_WAIT_RELAY, pressed);
-}
-
-void initializeDisplay() {
-  Serial.println("Initializing display...");
-  lcd.begin();
-  lcd.fillScreen(0x000000u);
-  lcd.setTextSize(2); 
-  //lcd.setBrightness(127);
-}
-
-void initializeTouchScreen() {
-  Serial.println("Initializing touch screen...");
-  touch_init();
-}
-
-void initializeLVGL() {
-  Serial.println("Initializing LVGL...");
-  lv_init();
 }
 
 void createSemaphores() {
@@ -694,11 +650,11 @@ public:
   #endif
     if (!store.load("_main", self_id, _prefs.node_name, sizeof(_prefs.node_name))) {  // legacy: node_name was from identity file
       // Need way to get some entropy to seed RNG
-      Serial.println("Press ENTER to generate key:");
-      char c = 0;
-      while (c != '\n') {   // wait for ENTER to be pressed
-        if (Serial.available()) c = Serial.read();
-      }
+      // Serial.println("Press ENTER to generate key:");
+      // char c = 0;
+      // while (c != '\n') {   // wait for ENTER to be pressed
+      //   if (Serial.available()) c = Serial.read();
+      // }
       ((StdRNG *)getRNG())->begin(millis());
 
       self_id = mesh::LocalIdentity(getRNG());  // create new random identity
@@ -941,9 +897,56 @@ void halt() {
   while (1) ;
 }
 
-void setup() {
-  Serial.begin(115200);
+void configureDisplay() {
+  ESP_LOGI(TAG, "Configuring display...");
 
+  screenWidth = lcd.width();
+  screenHeight = lcd.height();
+
+  lv_disp_draw_buf_init(&draw_buf, disp_draw_buf, NULL, screenWidth * screenHeight / 10);
+
+  /* Initialize the display */
+  lv_disp_drv_init(&disp_drv);
+  /* Change the following line to your display resolution */
+  disp_drv.hor_res = screenWidth;
+  disp_drv.ver_res = screenHeight;
+  disp_drv.flush_cb = my_disp_flush;
+  disp_drv.draw_buf = &draw_buf;
+  lv_disp_drv_register(&disp_drv);
+
+  /* Initialize the (dummy) input device driver */
+  static lv_indev_drv_t indev_drv;
+  lv_indev_drv_init(&indev_drv);
+  indev_drv.type = LV_INDEV_TYPE_POINTER;
+  indev_drv.read_cb = my_touchpad_read;
+  lv_indev_drv_register(&indev_drv);
+#ifdef TFT_BL
+  pinMode(TFT_BL, OUTPUT);
+  digitalWrite(TFT_BL, HIGH);
+#endif
+
+  lcd.fillScreen(0x000000u);
+}
+
+void initializeDisplay() {
+  ESP_LOGI(TAG, "Initializing display...");
+  lcd.begin();
+  lcd.fillScreen(0x000000u);
+  lcd.setTextSize(2); 
+  //lcd.setBrightness(127);
+}
+
+void initializeTouchScreen() {
+  ESP_LOGI(TAG, "Initializing touch screen...");
+  touch_init();
+}
+
+void initializeLVGL() {
+  ESP_LOGI(TAG, "Initializing LVGL...");
+  lv_init();
+}
+
+void initializeMesh() {
   board.begin();
 
   if (!radio_init()) { halt(); }
@@ -970,28 +973,42 @@ void setup() {
 
   // send out initial Advertisement to the mesh
   the_mesh.sendSelfAdvert(1200);   // add slight delay
+}
 
-  initializeDisplay();
+void setup() {
+  Serial.begin(115200);
+
+  initializeDisplay();  
   delay(200);
 
   initializeLVGL();
   initializeTouchScreen();
   configureDisplay();
 
-  createSemaphores();  
-
   initializeUI();
+  
   createTasks();
+
+  initializeMesh();
+
+  vTaskResume(t_core1_core);
 
   Serial.println("Setup completed");
 }
 
-void loop() {
-  the_mesh.loop();
-  rtc_clock.tick();
+void core_task(void *pvParameters) {
+
+  vTaskSuspend(NULL);
+
+  ESP_LOGI(TAG, "MeshCore: Task running on core %d", xPortGetCoreID());
+
+  while (1) {    
+    the_mesh.loop();
+    rtc_clock.tick();
+    vTaskDelay(DELAY_CORE_TASK / portTICK_PERIOD_MS);
+  }
 }
 
-
-// void loop() {
-//    vTaskDelete(NULL);
-// }
+void loop() {
+   vTaskDelete(NULL);
+}

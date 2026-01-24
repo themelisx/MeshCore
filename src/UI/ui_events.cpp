@@ -5,7 +5,3 @@
 
 #include "ui.h"
 
-void onDayLightPressed(lv_event_t * e)
-{
-	// Your code here
-}

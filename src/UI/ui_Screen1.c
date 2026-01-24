@@ -5,6 +5,28 @@
 
 #include "ui.h"
 
+static void scroll_begin_event(lv_event_t* e)
+{
+    /*Disable the scroll animations. Triggered when a tab button is clicked */
+    if (lv_event_get_code(e) == LV_EVENT_SCROLL_BEGIN) {
+        lv_anim_t* a = (lv_anim_t*)lv_event_get_param(e);
+        if (a)  a->time = 0;
+
+    }
+}
+
+void event_handler(lv_event_t * e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+    lv_obj_t * target = lv_event_get_target(e);
+
+    if(code == LV_EVENT_VALUE_CHANGED) {
+        if (target == ui_DayLight) {
+            onDayLightPressed(lv_obj_get_state(target) & LV_STATE_CHECKED);
+        }
+    }
+}
+
 void ui_Screen1_screen_init(void)
 {
     ui_Screen1 = lv_obj_create(NULL);
@@ -13,6 +35,10 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_bg_opa(ui_Screen1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
     ui_TabView1 = lv_tabview_create(ui_Screen1, LV_DIR_TOP, 50);
+
+    lv_obj_add_event_cb(lv_tabview_get_content(ui_TabView1), scroll_begin_event,LV_EVENT_SCROLL_BEGIN, NULL);
+    lv_obj_clear_flag(lv_tabview_get_content(ui_TabView1), LV_OBJ_FLAG_SCROLLABLE);
+
     lv_obj_set_width(ui_TabView1, 800);
     lv_obj_set_height(ui_TabView1, 480);
     lv_obj_set_align(ui_TabView1, LV_ALIGN_CENTER);
@@ -29,6 +55,286 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_style_text_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_ITEMS | LV_STATE_DEFAULT);
     lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_arial_18,
                                LV_PART_ITEMS | LV_STATE_DEFAULT);
+
+    #if defined(LANG_EN)
+    ui_TabPageWeather = lv_tabview_add_tab(ui_TabView1, "Weather");
+    #elif defined(LANG_GR)
+    ui_TabPageWeather = lv_tabview_add_tab(ui_TabView1, "Καιρός");
+    #endif   
+
+    ui_Container1 = lv_obj_create(ui_TabPageWeather);
+    lv_obj_remove_style_all(ui_Container1);
+    lv_obj_set_width(ui_Container1, 200);
+    lv_obj_set_height(ui_Container1, 390);
+    lv_obj_set_x(ui_Container1, -284);
+    lv_obj_set_y(ui_Container1, 0);
+    lv_obj_set_align(ui_Container1, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_Container1, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_Container1, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Container1, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_pad_row(ui_Container1, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_Container1, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label1 = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_Label1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label1, LV_ALIGN_CENTER);    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Label1, "Temperature");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Label1, "Θερμοκρασία");
+    #endif
+    lv_obj_set_style_text_color(ui_Label1, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label1, &lv_font_arial_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueTemperature = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_ValueTemperature, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueTemperature, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValueTemperature, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueTemperature, "--.- °C");
+    lv_obj_set_style_text_color(ui_ValueTemperature, lv_color_hex(0x17ABF7), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueTemperature, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueTemperature, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel1 = lv_obj_create(ui_Container1);
+    lv_obj_set_height(ui_Panel1, 1);
+    lv_obj_set_width(ui_Panel1, lv_pct(90));
+    lv_obj_set_x(ui_Panel1, 0);
+    lv_obj_set_y(ui_Panel1, -8);
+    lv_obj_set_align(ui_Panel1, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label3 = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_Label3, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label3, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label3, LV_ALIGN_CENTER);    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Label3, "Feels like");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Label3, "Αισθητή");
+    #endif
+    lv_obj_set_style_text_color(ui_Label3, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label3, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label3, &lv_font_arial_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueFeelsLike = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_ValueFeelsLike, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueFeelsLike, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ValueFeelsLike, -2);
+    lv_obj_set_y(ui_ValueFeelsLike, 57);
+    lv_obj_set_align(ui_ValueFeelsLike, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueFeelsLike, "--.- °C");
+    lv_obj_set_style_text_color(ui_ValueFeelsLike, lv_color_hex(0x17ABF7), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueFeelsLike, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueFeelsLike, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel4 = lv_obj_create(ui_Container1);
+    lv_obj_set_height(ui_Panel4, 1);
+    lv_obj_set_width(ui_Panel4, lv_pct(90));
+    lv_obj_set_x(ui_Panel4, 0);
+    lv_obj_set_y(ui_Panel4, -8);
+    lv_obj_set_align(ui_Panel4, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel4, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label4 = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_Label4, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label4, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label4, LV_ALIGN_CENTER);    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Label4, "Sunrise");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Label4, "Ανατολή");
+    #endif
+    lv_obj_set_style_text_color(ui_Label4, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label4, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label4, &lv_font_arial_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueSunrise = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_ValueSunrise, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueSunrise, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ValueSunrise, 14);
+    lv_obj_set_y(ui_ValueSunrise, 205);
+    lv_obj_set_align(ui_ValueSunrise, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueSunrise, "--:--");
+    lv_obj_set_style_text_color(ui_ValueSunrise, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueSunrise, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueSunrise, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Label5 = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_Label5, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label5, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label5, LV_ALIGN_CENTER);    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Label5, "Sunset");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Label5, "Δύση");
+    #endif
+    lv_obj_set_style_text_color(ui_Label5, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label5, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label5, &lv_font_arial_24, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueSunset = lv_label_create(ui_Container1);
+    lv_obj_set_width(ui_ValueSunset, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueSunset, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValueSunset, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueSunset, "--:--");
+    lv_obj_set_style_text_color(ui_ValueSunset, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueSunset, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueSunset, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Container2 = lv_obj_create(ui_TabPageWeather);
+    lv_obj_remove_style_all(ui_Container2);
+    lv_obj_set_width(ui_Container2, 200);
+    lv_obj_set_height(ui_Container2, 390);
+    lv_obj_set_x(ui_Container2, 280);
+    lv_obj_set_y(ui_Container2, 0);
+    lv_obj_set_align(ui_Container2, LV_ALIGN_CENTER);
+    lv_obj_set_flex_flow(ui_Container2, LV_FLEX_FLOW_COLUMN);
+    lv_obj_set_flex_align(ui_Container2, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Container2, LV_OBJ_FLAG_CLICKABLE | LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+    lv_obj_set_style_pad_row(ui_Container2, 15, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_pad_column(ui_Container2, 0, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Humidity = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_Humidity, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Humidity, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Humidity, LV_ALIGN_CENTER);
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Humidity, "Humidity");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Humidity, "Υγρασία");
+    #endif
+    lv_obj_set_style_text_color(ui_Humidity, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Humidity, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Humidity, &lv_font_arial_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueHumidity = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_ValueHumidity, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueHumidity, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValueHumidity, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueHumidity, "--%");
+    lv_obj_set_style_text_color(ui_ValueHumidity, lv_color_hex(0x17ABF7), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueHumidity, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueHumidity, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel3 = lv_obj_create(ui_Container2);
+    lv_obj_set_height(ui_Panel3, 1);
+    lv_obj_set_width(ui_Panel3, lv_pct(90));
+    lv_obj_set_align(ui_Panel3, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel3, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Pressure = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_Pressure, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Pressure, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Pressure, LV_ALIGN_CENTER);
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Pressure, "Pressure");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Pressure, "Πίεση");
+    #endif
+    lv_obj_set_style_text_color(ui_Pressure, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Pressure, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Pressure, &lv_font_arial_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValuePressure = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_ValuePressure, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValuePressure, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValuePressure, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValuePressure, "---- hpa");
+    lv_obj_set_style_text_color(ui_ValuePressure, lv_color_hex(0x17ABF7), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValuePressure, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValuePressure, &lv_font_arial_40, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Panel2 = lv_obj_create(ui_Container2);
+    lv_obj_set_height(ui_Panel2, 1);
+    lv_obj_set_width(ui_Panel2, lv_pct(90));
+    lv_obj_set_align(ui_Panel2, LV_ALIGN_CENTER);
+    lv_obj_clear_flag(ui_Panel2, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_Label2 = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_Label2, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Label2, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_Label2, LV_ALIGN_CENTER);
+    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_Label2, "Wind");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_Label2, "Άνεμος");
+    #endif
+    lv_obj_set_style_text_color(ui_Label2, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_Label2, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_Label2, &lv_font_arial_26, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueWindSpeed = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_ValueWindSpeed, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueWindSpeed, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValueWindSpeed, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueWindSpeed, "-- m/s");
+    lv_obj_set_style_text_color(ui_ValueWindSpeed, lv_color_hex(0x17ABF7), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueWindSpeed, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueWindSpeed, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueWindDirection = lv_label_create(ui_Container2);
+    lv_obj_set_width(ui_ValueWindDirection, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueWindDirection, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_align(ui_ValueWindDirection, LV_ALIGN_CENTER);    
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_ValueWindDirection, "Direction: --");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_ValueWindDirection, "Κατεύθυνση: --");
+    #endif
+    lv_obj_set_style_text_color(ui_ValueWindDirection, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueWindDirection, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueWindDirection, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_Image1 = lv_img_create(ui_TabPageWeather);
+    lv_obj_set_width(ui_Image1, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_Image1, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_Image1, 0);
+    lv_obj_set_y(ui_Image1, 14);
+    lv_obj_set_align(ui_Image1, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_Image1, LV_OBJ_FLAG_ADV_HITTEST);     /// Flags
+    lv_obj_clear_flag(ui_Image1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+
+    ui_ValueDate = lv_label_create(ui_TabPageWeather);
+    lv_obj_set_width(ui_ValueDate, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueDate, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ValueDate, 0);
+    lv_obj_set_y(ui_ValueDate, -165);
+    lv_obj_set_align(ui_ValueDate, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueDate, "--- --/--/----");
+    lv_obj_set_style_text_color(ui_ValueDate, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueDate, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueDate, &lv_font_arial_40, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueTime = lv_label_create(ui_TabPageWeather);
+    lv_obj_set_width(ui_ValueTime, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_ValueTime, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_ValueTime, 0);
+    lv_obj_set_y(ui_ValueTime, -100);
+    lv_obj_set_align(ui_ValueTime, LV_ALIGN_CENTER);
+    lv_label_set_text(ui_ValueTime, "--:--");
+    lv_obj_set_style_text_color(ui_ValueTime, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueTime, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueTime, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    ui_ValueLastUpdate = lv_label_create(ui_TabPageWeather);
+    lv_obj_set_width(ui_ValueLastUpdate, LV_SIZE_CONTENT);   /// 559
+    lv_obj_set_height(ui_ValueLastUpdate, LV_SIZE_CONTENT);    /// 24
+    lv_obj_set_x(ui_ValueLastUpdate, 0);
+    lv_obj_set_y(ui_ValueLastUpdate, 179);
+    lv_obj_set_align(ui_ValueLastUpdate, LV_ALIGN_CENTER);
+    #if defined(LANG_EN)
+    lv_label_set_text(ui_ValueLastUpdate, "Last update: --/--/----");
+    #elif defined(LANG_GR)
+    lv_label_set_text(ui_ValueLastUpdate, "Ενημερώθηκε στις: --/--/----");
+    #endif
+    lv_obj_set_style_text_color(ui_ValueLastUpdate, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_ValueLastUpdate, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_font(ui_ValueLastUpdate, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+
 
     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
 
@@ -78,19 +384,158 @@ void ui_Screen1_screen_init(void)
         LV_FLEX_ALIGN_START);
 
 
+
+    #if defined(LANG_EN)
     ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
+    #elif defined(LANG_GR)
+    ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Ρυθμίσεις");
+    #endif
 
-    ui_AutoLight = lv_checkbox_create(ui_TabPageSettings);
-    lv_checkbox_set_text(ui_AutoLight, "Auto dim brightness");
-    lv_obj_set_width(ui_AutoLight, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_AutoLight, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_AutoLight, -257);
-    lv_obj_set_y(ui_AutoLight, -168);
-    lv_obj_set_align(ui_AutoLight, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_AutoLight, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-    lv_obj_set_style_text_color(ui_AutoLight, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_AutoLight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_DayLight = lv_checkbox_create(ui_TabPageSettings);
+    #if defined(LANG_EN)
+    lv_checkbox_set_text(ui_DayLight, "Day light (summer time)");
+    #elif defined(LANG_GR)
+    lv_checkbox_set_text(ui_DayLight, "Θερινή ώρα");
+    #endif
+    lv_obj_set_style_text_font(ui_DayLight, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_width(ui_DayLight, LV_SIZE_CONTENT);   /// 1
+    lv_obj_set_height(ui_DayLight, LV_SIZE_CONTENT);    /// 1
+    lv_obj_set_x(ui_DayLight, -257);
+    lv_obj_set_y(ui_DayLight, -168);
+    lv_obj_set_align(ui_DayLight, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_DayLight, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    lv_obj_set_style_text_color(ui_DayLight, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_text_opa(ui_DayLight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
 
-    lv_obj_add_event_cb(ui_AutoLight, ui_event_AutoLight, LV_EVENT_ALL, NULL);
+    lv_obj_add_event_cb(ui_DayLight, event_handler, LV_EVENT_ALL, NULL);
+    lv_obj_add_state(ui_DayLight, LV_STATE_DEFAULT);
+
+    ui_DimOverlay = lv_obj_create(ui_Screen1);
+    lv_obj_remove_style_all(ui_DimOverlay);             // no border/padding
+    lv_obj_set_size(ui_DimOverlay, LV_PCT(100), LV_PCT(100));
+    lv_obj_set_align(ui_DimOverlay, LV_ALIGN_CENTER);
+
+    // black semi transparent background
+    lv_obj_set_style_bg_color(ui_DimOverlay, lv_color_hex(0x000000), 0);
+    lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);       // initially "off"
+
+    // Do not block touch/scroll
+    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
+    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLL_CHAIN_VER);
+
+    // always in front
+    lv_obj_move_foreground(ui_DimOverlay);
 
 }
+
+void setNightMode(bool night) {
+
+    if (!ui_DimOverlay) return;
+    if (night) {
+        lv_obj_set_style_bg_opa(ui_DimOverlay, 192, 0);  // 75% dark
+    } else {
+        lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);    // none
+    }
+}
+
+// void ui_Screen1_screen_init(void)
+// {
+//     ui_Screen1 = lv_obj_create(NULL);
+//     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+//     lv_obj_set_style_bg_color(ui_Screen1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+//     lv_obj_set_style_bg_opa(ui_Screen1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+//     ui_TabView1 = lv_tabview_create(ui_Screen1, LV_DIR_TOP, 50);
+//     lv_obj_set_width(ui_TabView1, 800);
+//     lv_obj_set_height(ui_TabView1, 480);
+//     lv_obj_set_align(ui_TabView1, LV_ALIGN_CENTER);
+//     lv_obj_clear_flag(ui_TabView1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
+//     lv_obj_set_style_bg_color(ui_TabView1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
+//     lv_obj_set_style_bg_opa(ui_TabView1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+//     lv_obj_set_style_bg_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0x424242),
+//                               LV_PART_MAIN | LV_STATE_DEFAULT);
+//     lv_obj_set_style_bg_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_MAIN | LV_STATE_DEFAULT);
+
+//     lv_obj_set_style_text_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0xFFFFFF),
+//                                 LV_PART_ITEMS | LV_STATE_DEFAULT);
+//     lv_obj_set_style_text_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_ITEMS | LV_STATE_DEFAULT);
+//     lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_arial_18,
+//                                LV_PART_ITEMS | LV_STATE_DEFAULT);
+
+//     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
+
+//     ui_Contacts = lv_list_create(ui_TabPageContacts);
+//     //lv_list_set_options(ui_Contacts, "Contact", LV_list_MODE_NORMAL);
+//     lv_obj_set_width(ui_Contacts, 246);
+//     lv_obj_set_height(ui_Contacts, 400);
+//     lv_obj_set_x(ui_Contacts, -262);
+//     lv_obj_set_y(ui_Contacts, 0);
+//     lv_obj_set_align(ui_Contacts, LV_ALIGN_CENTER);
+
+//     ui_ContactMessages = lv_list_create(ui_TabPageContacts);
+//     //lv_list_set_options(ui_ContactMessages, "Contact", LV_list_MODE_NORMAL);
+//     lv_obj_set_width(ui_ContactMessages, 500);
+//     lv_obj_set_height(ui_ContactMessages, 400);
+//     lv_obj_set_x(ui_ContactMessages, 124);
+//     lv_obj_set_y(ui_ContactMessages, 0);
+//     lv_obj_set_align(ui_ContactMessages, LV_ALIGN_CENTER);
+//     lv_obj_set_style_bg_color(ui_ContactMessages, lv_color_hex(0), 0);
+
+//     ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Channels");
+
+//     ui_Channels = lv_dropdown_create(ui_TabPageChannels);
+//     lv_dropdown_set_options(ui_Channels, "Public");
+//     lv_obj_set_width(ui_Channels, 291);
+//     lv_obj_set_height(ui_Channels, LV_SIZE_CONTENT);    /// 1
+//     lv_obj_set_x(ui_Channels, -243);
+//     lv_obj_set_y(ui_Channels, -182);
+//     lv_obj_set_align(ui_Channels, LV_ALIGN_CENTER);
+//     lv_obj_add_flag(ui_Channels, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+
+
+
+//     ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
+//     //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
+//     lv_obj_set_width(ui_ChannelMessages, 780);
+//     lv_obj_set_height(ui_ChannelMessages, 342);
+//     lv_obj_set_x(ui_ChannelMessages, 0);
+//     lv_obj_set_y(ui_ChannelMessages, 30);
+//     lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
+//     lv_obj_set_flex_flow(ui_ChannelMessages, LV_FLEX_FLOW_COLUMN);
+//     lv_obj_set_style_pad_row(ui_ChannelMessages, 6, 0);
+//     lv_obj_set_style_pad_all(ui_ChannelMessages, 6, 0);
+//     lv_obj_set_flex_align(ui_ChannelMessages,
+//         LV_FLEX_ALIGN_START,
+//         LV_FLEX_ALIGN_START,
+//         LV_FLEX_ALIGN_START);
+
+
+//     ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
+
+//     ui_AutoLight = lv_checkbox_create(ui_TabPageSettings);
+//     lv_checkbox_set_text(ui_AutoLight, "Auto dim brightness");
+//     lv_obj_set_width(ui_AutoLight, LV_SIZE_CONTENT);   /// 1
+//     lv_obj_set_height(ui_AutoLight, LV_SIZE_CONTENT);    /// 1
+//     lv_obj_set_x(ui_AutoLight, -257);
+//     lv_obj_set_y(ui_AutoLight, -168);
+//     lv_obj_set_align(ui_AutoLight, LV_ALIGN_CENTER);
+//     lv_obj_add_flag(ui_AutoLight, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+//     lv_obj_set_style_text_color(ui_AutoLight, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
+//     lv_obj_set_style_text_opa(ui_AutoLight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+//     lv_obj_add_event_cb(ui_AutoLight, ui_event_AutoLight, LV_EVENT_ALL, NULL);
+
+// }
+
+// void setNightMode(bool night) {
+
+//     if (!ui_DimOverlay) return;
+//     if (night) {
+//         lv_obj_set_style_bg_opa(ui_DimOverlay, 192, 0);  // 75% dark
+//     } else {
+//         lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);    // none
+//     }
+// }

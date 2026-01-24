@@ -1,5 +1,6 @@
 #include <Arduino.h>
 
+#include "esp_log.h"
 #include "UI/ui.h"
 #include "uiDefines.h"
 #include "uiVars.h"
@@ -15,6 +16,8 @@ const char *UIManager::days[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat
 const char *UIManager::months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
                                      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 #endif
+
+#define TAG "UIManager"
 
 UIManager::UIManager() {
 
@@ -35,34 +38,34 @@ void UIManager::format_datetime(char *buf, size_t size, const struct tm *timeinf
 }
 
 void UIManager::updateDateTime(const struct tm timeinfo) {
-  // // TODO: Add to settings "Date format"
-  // char date_str[50];
-  // format_datetime(date_str, sizeof(date_str), &timeinfo);
-  // lv_label_set_text(ui_ValueDate, date_str);
+  // TODO: Add to settings "Date format"
+  char date_str[50];
+  format_datetime(date_str, sizeof(date_str), &timeinfo);
+  lv_label_set_text(ui_ValueDate, date_str);
 
-  // // TODO: Add to settings "Hour format"
-  // strftime(tmp_buf, 50, "%H:%M", &timeinfo);      // 24h format
-  // //strftime(tmp_buf, 50, "%I:%M %p", &timeinfo); // 12h format
-  // lv_label_set_text(ui_ValueTime, tmp_buf);
+  // TODO: Add to settings "Hour format"
+  strftime(tmp_buf, 50, "%H:%M", &timeinfo);      // 24h format
+  //strftime(tmp_buf, 50, "%I:%M %p", &timeinfo); // 12h format
+  lv_label_set_text(ui_ValueTime, tmp_buf);
 
-  // // TODO: Add to settings "dim at night"
-  // // TODO: Add to settings "dim hours"
-  // // TODO: Add to settings "dim percentage"
-  // if (timeinfo.tm_hour > 21 || timeinfo.tm_hour < 7) {
-  //   setNightMode(true);
-  // } else {
-  //   setNightMode(false);
-  // }
+  // TODO: Add to settings "dim at night"
+  // TODO: Add to settings "dim hours"
+  // TODO: Add to settings "dim percentage"
+  if (timeinfo.tm_hour > 21 || timeinfo.tm_hour < 7) {
+    setNightMode(true);
+  } else {
+    setNightMode(false);
+  }
 }
 
 void UIManager::clearDateTime() {
-  // #if defined(LANG_EN)
-  //   uiManager->updateInfo("Clock sync...", COLOR_WHITE);
-  // #elif defined(LANG_GR)
-  //   uiManager->updateInfo("Συγχρονισμός ώρας...", COLOR_WHITE);
-  // #endif
-  // lv_label_set_text(ui_ValueDate, "--- --/--/----");
-  // lv_label_set_text(ui_ValueTime, "--:--");
+  #if defined(LANG_EN)
+    uiManager->updateInfo("Clock sync...", COLOR_WHITE);
+  #elif defined(LANG_GR)
+    uiManager->updateInfo("Συγχρονισμός ώρας...", COLOR_WHITE);
+  #endif
+  lv_label_set_text(ui_ValueDate, "--- --/--/----");
+  lv_label_set_text(ui_ValueTime, "--:--");
 }
 
 void UIManager::timestampToTime(time_t timestamp, char *buffer, size_t buffer_size) {
@@ -104,54 +107,6 @@ int UIManager::windSpeedToBeaufort(float speed) {
 
 void UIManager::updateValues() {
 
-  #if defined(USE_OPEN_WEATHER)
-    if (openWeather->isDataUpdated()) {
-      myDebug->println(DEBUG_LEVEL_DEBUG, "Updating openWeather UI values");
-      s_openWeatherData data = openWeather->getData();
-      openWeather->setDataUpdated(false);
-
-      sprintf(tmp_buf, "%0.1f °C", data.temperature[0]);
-      lv_label_set_text(ui_ValueTemperature, tmp_buf);
-
-      sprintf(tmp_buf, "%0.1f °C", data.temperature[1]);
-      lv_label_set_text(ui_ValueFeelsLike, tmp_buf);
-
-      timestampToTime(data.sun[0], time_str, sizeof(time_str));
-      lv_label_set_text(ui_ValueSunrise, time_str);
-
-      timestampToTime(data.sun[1], time_str, sizeof(time_str));
-      lv_label_set_text(ui_ValueSunset, time_str);
-
-      sprintf(tmp_buf, "%d %%", data.humidity);
-      lv_label_set_text(ui_ValueHumidity, tmp_buf);
-
-      sprintf(tmp_buf, "%d hPa", data.pressure);
-      lv_label_set_text(ui_ValuePressure, tmp_buf);
-
-      #if defined(LANG_EN)
-        sprintf(tmp_buf, "%0.1f m/s", data.windSpeed);
-        lv_label_set_text(ui_ValueWindSpeed, tmp_buf);
-        sprintf(tmp_buf, "Wind: %d Bf", windSpeedToBeaufort(data..windSpeed));
-        lv_label_set_text(ui_Label2, tmp_buf);
-
-        sprintf(tmp_buf, "Direction: %s", convertDegreesToDirection(data..windDirection));
-        lv_label_set_text(ui_ValueWindDirection, tmp_buf);
-
-        sprintf(tmp_buf, "Updated: %s", myClock->getTime());
-        lv_label_set_text(ui_ValueLastUpdate, tmp_buf);
-      #elif defined(LANG_GR)
-        lv_label_set_text(ui_Label2, "Άνεμος");
-        sprintf(tmp_buf, "%d Bf", windSpeedToBeaufort(data.windSpeed));
-        lv_label_set_text(ui_ValueWindSpeed, tmp_buf);
-
-        sprintf(tmp_buf, "Κατεύθυνση: %s", convertDegreesToDirection(data.windDirection));
-        lv_label_set_text(ui_ValueWindDirection, tmp_buf);
-
-        sprintf(tmp_buf, "Ενημερώθηκε: %s", myClock->getTime());
-        updateInfo(tmp_buf, COLOR_WHITE);
-      #endif  
-    }
-  #endif
 }
 
 void UIManager::updateInfo(const char *str, uint32_t color) {

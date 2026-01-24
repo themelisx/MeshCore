@@ -12,7 +12,3 @@
 // Modules //
 /////////////
 //#define SHOW_TOP_BAR
-
-// Language
-//#define LANG_EN
-#define LANG_GR

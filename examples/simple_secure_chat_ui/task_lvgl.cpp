@@ -4,11 +4,13 @@
 #include "uiDefines.h"
 #include "uiVars.h"
 
+#define TAG "lvgl_task"
+
 void lvgl_task(void *pvParameters) {
 
   vTaskSuspend(NULL);
 
-  ESP_LOGI("UI manager: Task running on core %d", xPortGetCoreID());
+  ESP_LOGI(TAG, "UI manager: Task running on core %d", xPortGetCoreID());
 
   while (1) {    
     lv_timer_handler();

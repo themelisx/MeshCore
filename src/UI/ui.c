@@ -19,9 +19,39 @@ lv_obj_t * ui_ContactMessages;
 lv_obj_t * ui_TabPageChannels;
 lv_obj_t * ui_Channels;
 lv_obj_t * ui_ChannelMessages;
-lv_obj_t * ui_TabPageSettings;
 void ui_event_AutoLight(lv_event_t * e);
 lv_obj_t * ui_AutoLight;
+lv_obj_t * ui____initial_actions0;
+
+lv_obj_t * ui_DimOverlay;
+lv_obj_t * ui_TabPageWeather;
+lv_obj_t * ui_Container1;
+lv_obj_t * ui_Label1;
+lv_obj_t * ui_ValueTemperature;
+lv_obj_t * ui_Panel1;
+lv_obj_t * ui_Label3;
+lv_obj_t * ui_ValueFeelsLike;
+lv_obj_t * ui_Panel4;
+lv_obj_t * ui_Label4;
+lv_obj_t * ui_ValueSunrise;
+lv_obj_t * ui_Label5;
+lv_obj_t * ui_ValueSunset;
+lv_obj_t * ui_Container2;
+lv_obj_t * ui_Humidity;
+lv_obj_t * ui_ValueHumidity;
+lv_obj_t * ui_Panel3;
+lv_obj_t * ui_Pressure;
+lv_obj_t * ui_ValuePressure;
+lv_obj_t * ui_Panel2;
+lv_obj_t * ui_Label2;
+lv_obj_t * ui_ValueWindSpeed;
+lv_obj_t * ui_ValueWindDirection;
+lv_obj_t * ui_Image1;
+lv_obj_t * ui_ValueDate;
+lv_obj_t * ui_ValueTime;
+lv_obj_t * ui_ValueLastUpdate;
+lv_obj_t * ui_TabPageSettings;
+lv_obj_t * ui_DayLight;
 lv_obj_t * ui____initial_actions0;
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
@@ -31,18 +61,6 @@ lv_obj_t * ui____initial_actions0;
 #if LV_COLOR_16_SWAP !=0
     #error "LV_COLOR_16_SWAP should be 0 to match SquareLine Studio's settings"
 #endif
-
-///////////////////// ANIMATIONS ////////////////////
-
-///////////////////// FUNCTIONS ////////////////////
-void ui_event_AutoLight(lv_event_t * e)
-{
-    lv_event_code_t event_code = lv_event_get_code(e);
-    lv_obj_t * target = lv_event_get_target(e);
-    if(event_code == LV_EVENT_CLICKED) {
-        //onDayLightPressed(e);
-    }
-}
 
 ///////////////////// SCREENS ////////////////////
 
