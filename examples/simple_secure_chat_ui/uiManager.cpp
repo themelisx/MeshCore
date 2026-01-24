@@ -1,10 +1,9 @@
 #include <Arduino.h>
 
 #include "UI/ui.h"
-#include "defines.h"
-#include "vars.h"
+#include "uiDefines.h"
+#include "uiVars.h"
 
-//#include <MyDebug.h>
 #include "uiManager.h"
 
 #if defined(LANG_GR)

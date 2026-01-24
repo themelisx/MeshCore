@@ -1,0 +1,191 @@
+#include <Arduino.h>
+#include <WiFi.h>
+
+#include "esp_log.h"
+#include "MyWiFi.h"
+
+MyWiFi::MyWiFi() {
+    ESP_LOGD("[WiFi]");  
+    
+    initDone = false;
+    tmp_buf = (char*)malloc(128);   
+
+    semaphoreData = xSemaphoreCreateMutex();
+    xSemaphoreGive(semaphoreData);
+}
+
+void MyWiFi::init(wifi_mode_t mode, char *ssid, char *password) {
+    ESP_LOGD("Initializing WiFi");  
+    
+    savedSSID = (char*)malloc(strlen(ssid) + 1);
+    strcpy(savedSSID, ssid);
+    
+    savedPassword = (char*)malloc(strlen(password) + 1);
+    strcpy(savedPassword, password);
+
+    ESP_LOGD("SSID: '%s', password:'%s'", savedSSID, savedPassword);
+
+    WiFi.mode(mode);
+    ESP_LOGI("MAC Address: %s", WiFi.macAddress());
+    initDone = true;
+}
+
+void MyWiFi::stop() {
+    if (!initDone) {
+        notInitialized();
+        return;        
+    }
+    disconnect();
+    initDone = false;
+    free(savedSSID);
+    free(savedPassword);
+}
+
+void MyWiFi::notInitialized() {
+    ESP_LOGE("WiFi not initialized");
+}
+
+void MyWiFi::connect() {    
+    ESP_LOGI("WiFi disconnected, reconnecting...");
+
+    if (!initDone) {
+        notInitialized();
+        return;        
+    }
+
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    WiFi.disconnect();
+    WiFi.begin(savedSSID, savedPassword);
+    unsigned long startAttemptTime = millis();
+
+    while (WiFi.status() != WL_CONNECTED && millis() - startAttemptTime < 10000) {
+        delay(500);
+    }
+
+    wifi_ap_record_t ap_info;
+    if (esp_wifi_sta_get_ap_info(&ap_info) == ESP_OK) {
+        ESP_LOGD("WiFi connected");
+        WiFiChannel = ap_info.primary;      
+        ESP_LOGD("WiFi channel: %d", WiFiChannel);
+    } else {
+        WiFiChannel = 0;
+        ESP_LOGD("Not connected to any WiFi network.");    
+    }
+    xSemaphoreGive(semaphoreData);
+}
+
+void MyWiFi::ensureConnection() {
+    if (!initDone) {
+        notInitialized();
+        return;        
+    }
+    if (!isConnected()) {
+        connect();
+    }
+}
+
+bool MyWiFi::isConnected() {
+    if (!initDone) {
+        notInitialized();
+        return false;        
+    }
+    bool ret;
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    ret = WiFi.status() == WL_CONNECTED;
+    xSemaphoreGive(semaphoreData);
+    return ret;
+}
+
+void MyWiFi::disconnect() {
+    ESP_LOGD("WiFi disconnecting...");
+    if (!initDone) {
+        notInitialized();
+        return;        
+    }
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    WiFi.disconnect();
+    xSemaphoreGive(semaphoreData);
+}
+
+wl_status_t MyWiFi::getStatus() {
+    if (!initDone) {
+        notInitialized();
+        return WL_DISCONNECTED;        
+    }
+    wl_status_t ret;
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    ret = WiFi.status();
+    xSemaphoreGive(semaphoreData);
+    return ret;
+}
+
+uint8_t MyWiFi::getChannel() {
+    if (!initDone) {
+        notInitialized();
+        return 0;        
+    }
+    uint8_t ret;
+    xSemaphoreTake(semaphoreData, portMAX_DELAY);
+    ret = WiFiChannel;
+    xSemaphoreGive(semaphoreData);
+    return ret;
+}
+
+////////////
+// ESPNow //
+////////////
+void MyWiFi::addEspNowPeer(uint8_t address[6]) {
+    ESP_LOGD("Adding ESPNow peer");
+    memcpy(peerInfo.peer_addr, address, 6);
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+        ESP_LOGE("Failed to add peer");
+    } else {
+        ESP_LOGD("ESPNow peer added");
+    }
+}
+
+bool MyWiFi::initESPNow(int channel, bool encrypted, OnDataSentCallback onSent, OnDataRecvCallback onRecv) {
+
+    ESP_LOGI("Initializing ESP-NOW...");
+
+    if (onRecv == nullptr) {
+        ESP_LOGE("register_recv_cb is null");        
+        return false;
+    }
+    
+    WiFi.mode(WIFI_STA);
+    
+    ESP_LOGI("MAC Address: %s", WiFi.macAddress());
+
+    // Init ESP-NOW
+    if (esp_now_init() != ESP_OK) {
+        ESP_LOGE("Error initializing ESP-NOW");
+        return false;
+    } else {
+        ESP_LOGD("Initializing ESP-NOW ok");
+    }
+
+    // preper register peer
+    peerInfo.channel = channel;  
+    peerInfo.encrypt = encrypted;
+    peerInfo.ifidx = WIFI_IF_STA;
+
+    // Once ESPNow is successfully Init, we will register for Send CB to
+    // get the status of Trasnmitted packet
+    if (onSent != nullptr) {
+        esp_now_register_send_cb(onSent);
+    }
+
+    // Register for a callback function that will be called when data is received
+    esp_now_register_recv_cb(onRecv);
+    
+    return true;
+}
+
+esp_err_t MyWiFi::sendEspNow(const uint8_t *peer_addr, uint8_t type, uint8_t id, uint16_t value) {
+    espNowPacket.type = type;
+    espNowPacket.id = id;
+    espNowPacket.value = value;
+    return esp_now_send(peer_addr, (uint8_t *) &espNowPacket, sizeof(s_espNow));
+}
+

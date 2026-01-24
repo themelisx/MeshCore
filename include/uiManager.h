@@ -2,7 +2,7 @@
 #define UI_MANAGER_h
 
 #include <Arduino.h>
-#include "defines.h"
+#include "uiDefines.h"
 
 class UIManager {
   private:

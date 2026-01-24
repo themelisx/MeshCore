@@ -52,23 +52,19 @@
 #include "../src/fonts/fonts.h"
 #include "../lvgl/lvgl.h"
 
-#include "../include/externals.h"
+#include "../include/uiExternals.h"
 #include "../include/lgfx.h"
-#include "../include/defines.h"
-#include "../include/structs.h"
+#include "../include/uiDefines.h"
 #include "../include/uiManager.h"
-#ifdef USE_MULTI_THREAD
-  #include "../include/tasks.h"
-#endif
-
-#include "touch.h"
+#include "../include/uiTasks.h"
+#include "uiTouch.h"
 
 #define SEND_TIMEOUT_BASE_MILLIS          500
 #define FLOOD_SEND_TIMEOUT_FACTOR         16.0f
 #define DIRECT_SEND_PERHOP_FACTOR         6.0f
 #define DIRECT_SEND_PERHOP_EXTRA_MILLIS   250
 
-#define  PUBLIC_GROUP_PSK  "izOH6cXN6mrJ5e26oRXNcg=="
+#define PUBLIC_GROUP_PSK  "izOH6cXN6mrJ5e26oRXNcg=="
 
 #define MAX_CHAT_MESSAGES 50
 
@@ -82,18 +78,8 @@ static lv_color_t disp_draw_buf[800 * 480 / 10];
 //static lv_color_t disp_draw_buf;
 static lv_disp_drv_t disp_drv;
 
-s_espNow espNowPacket;
 UIManager *uiManager;
-
-#ifdef USE_MULTI_THREAD
-  // Tasks
-  #ifdef DISPLAY_AT_CORE1
-    TaskHandle_t t_core1_tft;
-  #endif
-
-  // Semaphores
-  SemaphoreHandle_t semaphoreData;
-#endif
+SemaphoreHandle_t semaphoreData;
 
 TwoWire I2Cone = TwoWire(0);
 Adafruit_SSD1306 display = Adafruit_SSD1306(128, 64, &I2Cone, OLED_RESET);
@@ -412,10 +398,8 @@ void initializeLVGL() {
 }
 
 void createSemaphores() {
-#ifdef USE_MULTI_THREAD
   semaphoreData = xSemaphoreCreateMutex();
   xSemaphoreGive(semaphoreData);
-#endif
 }
 
 // Believe it or not, this std C function is busted on some platforms!
@@ -679,8 +663,12 @@ public:
   {
     // defaults
     memset(&_prefs, 0, sizeof(_prefs));
-    _prefs.airtime_factor = 2.0;    // one third
-    strcpy(_prefs.node_name, "NONAME");
+    _prefs.airtime_factor = 2.0;    // one third    
+    #ifdef ADVERT_NAME
+      strcpy(_prefs.node_name, ADVERT_NAME);
+    #else
+      strcpy(_prefs.node_name, "NONAME");
+    #endif
     _prefs.freq = LORA_FREQ;
     _prefs.tx_power_dbm = LORA_TX_POWER;
 
