@@ -88,15 +88,25 @@ void ui_Screen1_screen_init(void)
     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
     #elif defined(LANG_GR)
     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Επαφές");
+    // Prevent scrolling
+    lv_obj_set_scrollbar_mode(ui_TabPageContacts, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(ui_TabPageContacts, LV_OBJ_FLAG_SCROLLABLE);
     #endif    
 
     ui_Contacts = lv_list_create(ui_TabPageContacts);
     //lv_list_set_options(ui_Contacts, "Contact", LV_list_MODE_NORMAL);
-    lv_obj_set_width(ui_Contacts, 246);
+    lv_obj_set_width(ui_Contacts, 250);
     lv_obj_set_height(ui_Contacts, 400);
-    lv_obj_set_x(ui_Contacts, -262);
+    lv_obj_set_x(ui_Contacts, -274);
     lv_obj_set_y(ui_Contacts, 0);
     lv_obj_set_align(ui_Contacts, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_opa(ui_Contacts, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ui_Contacts, 0, 0);
+    lv_obj_set_style_outline_width(ui_Contacts, 0, 0);
+    lv_obj_set_style_shadow_width(ui_Contacts, 0, 0);
+    //lv_obj_set_scrollbar_mode(ui_Contacts, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_opa(ui_Contacts, LV_OPA_TRANSP, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(ui_Contacts, 0, LV_PART_ITEMS);
 
     ui_ContactMessages = lv_list_create(ui_TabPageContacts);
     //lv_list_set_options(ui_ContactMessages, "Contact", LV_list_MODE_NORMAL);
@@ -106,6 +116,20 @@ void ui_Screen1_screen_init(void)
     lv_obj_set_y(ui_ContactMessages, 0);
     lv_obj_set_align(ui_ContactMessages, LV_ALIGN_CENTER);
     lv_obj_set_style_bg_color(ui_ContactMessages, lv_color_hex(0), 0);
+    lv_obj_set_style_bg_opa(ui_ContactMessages, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ui_ContactMessages, 0, 0);
+    lv_obj_set_style_outline_width(ui_ContactMessages, 0, 0);
+    lv_obj_set_style_shadow_width(ui_ContactMessages, 0, 0);
+    //lv_obj_set_scrollbar_mode(ui_ContactMessages, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_opa(ui_ContactMessages, LV_OPA_TRANSP, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(ui_ContactMessages, 0, LV_PART_ITEMS);
+    
+    lv_obj_t *divider = lv_obj_create(ui_TabPageContacts);
+    lv_obj_set_size(divider, 2, 400);
+    lv_obj_set_pos(divider, 222, 0); // align between lists
+    lv_obj_set_style_bg_color(divider, lv_color_hex(0x444444), 0);
+    lv_obj_set_style_border_width(divider, 0, 0);
+    lv_obj_set_style_radius(divider, 0, 0);
 
     #if defined(LANG_EN)
     ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Channels");

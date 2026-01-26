@@ -19,8 +19,7 @@
 #define STATE_OFF HIGH
 #define STATE_ON LOW
 
-// EEPROM position (0 and 1 are reserved)
-#define PREF_WAIT_RELAY "wait_relay"
+#define MAX_CHAT_MESSAGES 50
 
 // Colors
 #define COLOR_WHITE 0xFFFFFF
