@@ -48,7 +48,6 @@
 #include <Adafruit_SSD1306.h> 
 #include <Adafruit_GFX.h>
 
-#include "UI/ui.h"
 #include "../src/fonts/fonts.h"
 #include "../lvgl/lvgl.h"
 
@@ -91,10 +90,6 @@ void format_time(uint32_t ts, char *buf, size_t len)
     time_t t = ts;
     struct tm *tm_info = localtime(&t);
     strftime(buf, len, "%H:%M:%S", tm_info);
-}
-
-void onDayLightPressed(bool pressed) {
-  //mySettings->writeBool(PREF_DAYLIGHT, pressed);
 }
 
 void parse_group_message(const char *input,
@@ -171,8 +166,6 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 void initializeUI() {  
 
   Serial.println("initialize UI...");  
-  ui_init();
-  setNightMode(false);
   //ui_init_screen_events();
 
   /*
@@ -188,6 +181,7 @@ void initializeUI() {
   #endif
   */
   uiManager = new UIManager();
+  uiManager->setNightMode(false);
   
 }
 
@@ -392,7 +386,7 @@ protected:
 
     bool is_self = (strcmp(from.name, _prefs.node_name) == 0);
 
-    uiManager->addPrivateChatBubble(ui_ContactMessages, time_buf, text, is_self);
+    uiManager->addPrivateChatBubble(time_buf, text, is_self);
   }
 
   void onCommandDataRecv(const ContactInfo& from, mesh::Packet* pkt, uint32_t sender_timestamp, const char *text) override {
@@ -427,7 +421,7 @@ protected:
 
     bool is_self = (strcmp(sender, _prefs.node_name) == 0);
 
-    uiManager->addChatBubble(ui_ChannelMessages, time_buf, sender, msg, is_self);
+    uiManager->addChatBubble(time_buf, sender, msg, is_self);
   }
 
   uint8_t onContactRequest(const ContactInfo& contact, uint32_t sender_timestamp, const uint8_t* data, uint8_t len, uint8_t* reply) override {

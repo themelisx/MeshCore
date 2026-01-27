@@ -26,18 +26,53 @@ class UIManager {
 
     lv_obj_t *chat_items[MAX_CHAT_MESSAGES];
     int chat_count = 0;
+    int channelInputBaseY = 185;
+    int channelInputBaseKeybOnY = -15;
+    void onShowKeyboard();    
+    void onHideKeyboard();
+    void ui_Screen1_screen_init(void);    
+
+    lv_obj_t* ui_Screen1;
+    lv_obj_t* ui_TabView1;
+    lv_obj_t* ui_TabPageContacts;
+    lv_obj_t* ui_Contacts;
+    lv_obj_t* ui_ContactMessages;
+    lv_obj_t* ui_TabPageChannels;
+    lv_obj_t* ui_Channels;
+    lv_obj_t* ui_ChannelMessages;
+    lv_obj_t* ui_AutoLight;
+    lv_obj_t* ui____initial_actions0;
+
+    lv_obj_t* ui_DimOverlay;
+    lv_obj_t* ui_TabPageHome;
+    lv_obj_t* ui_ValueDate;
+    lv_obj_t* ui_ValueTime;
+    lv_obj_t* ui_TabPageSettings;
+    lv_obj_t* ui_DayLight;
+    lv_obj_t* ui_ChannelInput;
+    lv_obj_t* ui_SendBtn;
+    lv_obj_t* ui_Keyboard;
+    lv_obj_t* iu_SendLabel;
+    lv_obj_t* ui_ChannelDivider;
 
   public:
     UIManager();
+
+    void onChannelInputFocus(lv_event_t* e);
+    void onDimOverlayClick(lv_event_t* e);
+    void onSendClick(lv_event_t* e);
+    void onKeyboardEvent(lv_event_t* e);
+    void scroll_begin_event(lv_event_t* e);
 
     void updateDateTime(const struct tm timeinfo);
     void updateInfo(const char *str, uint32_t color);
     void clearDateTime();
     void updateValues();    
-    void addPrivateChatBubble(lv_obj_t *list, const char *time_str, const char *msg, bool is_self);
-    void addChatBubble(lv_obj_t *list, const char *time_str, const char *sender, const char *msg, bool is_self);
+    void addPrivateChatBubble(const char *time_str, const char *msg, bool is_self);
+    void addChatBubble(const char *time_str, const char *sender, const char *msg,bool is_self);
     void addContactToUI(ContactInfo c);
     void handleContactClick(lv_event_t *e);
+    void setNightMode(bool night);
 };
 
 #endif
