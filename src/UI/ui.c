@@ -11,25 +11,31 @@
 
 // SCREEN: ui_Screen1
 void ui_Screen1_screen_init(void);
-lv_obj_t * ui_Screen1;
-lv_obj_t * ui_TabView1;
-lv_obj_t * ui_TabPageContacts;
-lv_obj_t * ui_Contacts;
-lv_obj_t * ui_ContactMessages;
-lv_obj_t * ui_TabPageChannels;
-lv_obj_t * ui_Channels;
-lv_obj_t * ui_ChannelMessages;
+lv_obj_t* ui_Screen1;
+lv_obj_t* ui_TabView1;
+lv_obj_t* ui_TabPageContacts;
+lv_obj_t* ui_Contacts;
+lv_obj_t* ui_ContactMessages;
+lv_obj_t* ui_TabPageChannels;
+lv_obj_t* ui_Channels;
+lv_obj_t* ui_ChannelMessages;
 void ui_event_AutoLight(lv_event_t * e);
-lv_obj_t * ui_AutoLight;
-lv_obj_t * ui____initial_actions0;
+lv_obj_t* ui_AutoLight;
+lv_obj_t* ui____initial_actions0;
 
-lv_obj_t * ui_DimOverlay;
-lv_obj_t * ui_TabPageHome;
-lv_obj_t * ui_ValueDate;
-lv_obj_t * ui_ValueTime;
-lv_obj_t * ui_TabPageSettings;
-lv_obj_t * ui_DayLight;
-lv_obj_t * ui____initial_actions0;
+lv_obj_t* ui_DimOverlay;
+lv_obj_t* ui_TabPageHome;
+lv_obj_t* ui_ValueDate;
+lv_obj_t* ui_ValueTime;
+lv_obj_t* ui_TabPageSettings;
+lv_obj_t* ui_DayLight;
+lv_obj_t* ui____initial_actions0;
+lv_obj_t* ui_ChannelInput;
+lv_obj_t* ui_SendBtn;
+lv_obj_t* ui_Keyboard;
+lv_obj_t* iu_SendLabel;
+lv_obj_t* ui_ChannelDivider;
+
 
 ///////////////////// TEST LVGL SETTINGS ////////////////////
 #if LV_COLOR_DEPTH != 16

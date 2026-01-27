@@ -4,6 +4,71 @@
 // Project name: SquareLine_Project
 
 #include "ui.h"
+static int channelInputBaseY = 185;
+static int channelInputBaseKeybOnY = 0;
+
+void onShowKeyboard() {
+    lv_obj_clear_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
+    //lv_obj_set_style_bg_opa(ui_DimOverlay, 160, 0);
+    lv_obj_add_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_set_y(ui_ChannelInput, channelInputBaseKeybOnY);
+    lv_obj_set_y(ui_SendBtn, channelInputBaseKeybOnY);
+}
+
+void onHideKeyboard() {
+    lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
+    //lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);
+    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
+
+    lv_obj_set_y(ui_ChannelInput, channelInputBaseY);
+    lv_obj_set_y(ui_SendBtn, channelInputBaseY);
+}
+
+void onChannelInputFocus(lv_event_t* e)
+{
+    lv_obj_t* ta = lv_event_get_target(e);
+    if(!ui_Keyboard || !ta) return;
+
+    lv_keyboard_set_textarea(ui_Keyboard, ta);
+    onShowKeyboard();
+}
+
+void onDimOverlayClick(lv_event_t* e)
+{
+    onHideKeyboard();
+}
+
+void onSendClick(lv_event_t* e)
+{
+    char fullMessage[260];
+    onHideKeyboard();
+
+    const char* msg = lv_textarea_get_text(ui_ChannelInput);
+    if(msg == NULL || strlen(msg) == 0) return;
+
+    lv_textarea_set_text(ui_ChannelInput, "");
+
+    sprintf(fullMessage, "public %s", msg);
+    //handleCommand(fullMessage);
+}
+
+void onKeyboardEvent(lv_event_t* e)
+{
+    lv_event_code_t code = lv_event_get_code(e);
+
+    if(code == LV_EVENT_READY || code == LV_EVENT_CANCEL)
+    {
+        lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
+
+        // Restore UI
+        lv_obj_set_y(ui_ChannelInput, channelInputBaseY);
+        lv_obj_set_y(ui_SendBtn, channelInputBaseY);
+
+        lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);
+        lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
+    }
+}
 
 static void scroll_begin_event(lv_event_t* e)
 {
@@ -87,11 +152,11 @@ void ui_Screen1_screen_init(void)
     #if defined(LANG_EN)
     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
     #elif defined(LANG_GR)
-    ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Επαφές");
+    ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Επαφές");    
+    #endif    
     // Prevent scrolling
     lv_obj_set_scrollbar_mode(ui_TabPageContacts, LV_SCROLLBAR_MODE_OFF);
     lv_obj_clear_flag(ui_TabPageContacts, LV_OBJ_FLAG_SCROLLABLE);
-    #endif    
 
     ui_Contacts = lv_list_create(ui_TabPageContacts);
     //lv_list_set_options(ui_Contacts, "Contact", LV_list_MODE_NORMAL);
@@ -136,6 +201,9 @@ void ui_Screen1_screen_init(void)
     #elif defined(LANG_GR)
     ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Κανάλια");
     #endif
+    lv_obj_set_scrollbar_mode(ui_TabPageChannels, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_clear_flag(ui_TabPageChannels, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_set_style_bg_color(ui_TabPageChannels, lv_color_hex(0x000000), 0);
 
     ui_Channels = lv_dropdown_create(ui_TabPageChannels);
     lv_dropdown_set_options(ui_Channels, "Public");
@@ -149,17 +217,25 @@ void ui_Screen1_screen_init(void)
     ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
     //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
     lv_obj_set_width(ui_ChannelMessages, 780);
-    lv_obj_set_height(ui_ChannelMessages, 342);
+    lv_obj_set_height(ui_ChannelMessages, 260);
     lv_obj_set_x(ui_ChannelMessages, 0);
-    lv_obj_set_y(ui_ChannelMessages, 30);
+    lv_obj_set_y(ui_ChannelMessages, -40);
     lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
-    lv_obj_set_flex_flow(ui_ChannelMessages, LV_FLEX_FLOW_COLUMN);
-    lv_obj_set_style_pad_row(ui_ChannelMessages, 6, 0);
-    lv_obj_set_style_pad_all(ui_ChannelMessages, 6, 0);
-    lv_obj_set_flex_align(ui_ChannelMessages,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START,
-        LV_FLEX_ALIGN_START);
+    lv_obj_set_style_bg_color(ui_ChannelMessages, lv_color_hex(0), 0);
+    lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, 0);
+    lv_obj_set_style_border_width(ui_ChannelMessages, 0, 0);
+    lv_obj_set_style_outline_width(ui_ChannelMessages, 0, 0);
+    lv_obj_set_style_shadow_width(ui_ChannelMessages, 0, 0);
+    //lv_obj_set_scrollbar_mode(ui_ChannelMessages, LV_SCROLLBAR_MODE_OFF);
+    lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, LV_PART_ITEMS);
+    lv_obj_set_style_border_width(ui_ChannelMessages, 0, LV_PART_ITEMS);
+
+    ui_ChannelDivider = lv_obj_create(ui_TabPageChannels);
+    lv_obj_set_size(ui_ChannelDivider, 780, 1);
+    lv_obj_set_pos(ui_ChannelDivider, 0, 150);
+    lv_obj_set_align(ui_ChannelDivider, LV_ALIGN_CENTER);
+    lv_obj_set_style_bg_color(ui_ChannelDivider, lv_color_hex(0x444444), 0);
+    lv_obj_set_style_border_width(ui_ChannelDivider, 0, 0);
 
     #if defined(LANG_EN)
     ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
@@ -190,10 +266,58 @@ void ui_Screen1_screen_init(void)
     lv_obj_remove_style_all(ui_DimOverlay);             // no border/padding
     lv_obj_set_size(ui_DimOverlay, LV_PCT(100), LV_PCT(100));
     lv_obj_set_align(ui_DimOverlay, LV_ALIGN_CENTER);
+    lv_obj_add_event_cb(ui_DimOverlay, onDimOverlayClick, LV_EVENT_CLICKED, NULL);
 
     // black semi transparent background
     lv_obj_set_style_bg_color(ui_DimOverlay, lv_color_hex(0x000000), 0);
     lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);       // initially "off"
+
+    //Edit text
+    ui_ChannelInput = lv_textarea_create(ui_TabPageChannels);
+    lv_obj_set_size(ui_ChannelInput, 670, 40);
+    lv_obj_set_pos(ui_ChannelInput, -50, channelInputBaseY);
+    lv_obj_set_align(ui_ChannelInput, LV_ALIGN_CENTER);
+    lv_obj_add_flag(ui_ChannelInput, LV_OBJ_FLAG_CLICKABLE);
+    lv_obj_add_flag(ui_ChannelInput, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
+
+    #if defined(LANG_EN)
+    lv_textarea_set_placeholder_text(ui_ChannelInput, "Write message...");
+    #elif defined(LANG_GR)
+    lv_textarea_set_placeholder_text(ui_ChannelInput, "Γράψε μήνυμα...");
+    #endif    
+    lv_textarea_set_one_line(ui_ChannelInput, true);
+    lv_obj_set_style_text_font(ui_ChannelInput, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+
+    lv_obj_set_style_bg_color(ui_ChannelInput, lv_color_hex(0x111111), 0);
+    lv_obj_set_style_text_color(ui_ChannelInput, lv_color_white(), 0);
+    lv_obj_set_style_border_color(ui_ChannelInput, lv_color_hex(0x444444), 0);
+    lv_obj_set_style_border_width(ui_ChannelInput, 1, 0);
+    lv_obj_set_style_radius(ui_ChannelInput, 6, 0);
+    lv_obj_add_event_cb(ui_ChannelInput, onChannelInputFocus, LV_EVENT_CLICKED, NULL);
+
+    // Send button
+    ui_SendBtn = lv_btn_create(ui_TabPageChannels);
+    lv_obj_set_size(ui_SendBtn, 90, 42);
+    lv_obj_set_pos(ui_SendBtn, 350, channelInputBaseY);
+    lv_obj_set_align(ui_SendBtn, LV_ALIGN_CENTER);
+    lv_obj_set_style_text_font(ui_SendBtn, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
+    lv_obj_set_style_bg_color(ui_SendBtn, lv_color_hex(0x3A7AFE), 0);
+    lv_obj_add_event_cb(ui_SendBtn, onSendClick, LV_EVENT_CLICKED, NULL);
+
+    iu_SendLabel = lv_label_create(ui_SendBtn);
+    #if defined(LANG_EN)
+    lv_label_set_text(sendLabel, "Send");
+    #elif defined(LANG_GR)
+    lv_label_set_text(iu_SendLabel, "Αποστολή");
+    #endif    
+    lv_obj_center(iu_SendLabel);
+
+    // Keyboard
+    ui_Keyboard = lv_keyboard_create(lv_layer_top());
+    lv_obj_set_size(ui_Keyboard, 800, 200); 
+    lv_obj_set_align(ui_Keyboard, LV_ALIGN_BOTTOM_MID);
+    lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_event_cb(ui_Keyboard, onKeyboardEvent, LV_EVENT_ALL, NULL);
 
     // Do not block touch/scroll
     lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
@@ -215,103 +339,3 @@ void setNightMode(bool night) {
         lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);    // none
     }
 }
-
-// void ui_Screen1_screen_init(void)
-// {
-//     ui_Screen1 = lv_obj_create(NULL);
-//     lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-//     lv_obj_set_style_bg_color(ui_Screen1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-//     lv_obj_set_style_bg_opa(ui_Screen1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-//     ui_TabView1 = lv_tabview_create(ui_Screen1, LV_DIR_TOP, 50);
-//     lv_obj_set_width(ui_TabView1, 800);
-//     lv_obj_set_height(ui_TabView1, 480);
-//     lv_obj_set_align(ui_TabView1, LV_ALIGN_CENTER);
-//     lv_obj_clear_flag(ui_TabView1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-//     lv_obj_set_style_bg_color(ui_TabView1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-//     lv_obj_set_style_bg_opa(ui_TabView1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-//     lv_obj_set_style_bg_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0x424242),
-//                               LV_PART_MAIN | LV_STATE_DEFAULT);
-//     lv_obj_set_style_bg_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_MAIN | LV_STATE_DEFAULT);
-
-//     lv_obj_set_style_text_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0xFFFFFF),
-//                                 LV_PART_ITEMS | LV_STATE_DEFAULT);
-//     lv_obj_set_style_text_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_ITEMS | LV_STATE_DEFAULT);
-//     lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_arial_18,
-//                                LV_PART_ITEMS | LV_STATE_DEFAULT);
-
-//     ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
-
-//     ui_Contacts = lv_list_create(ui_TabPageContacts);
-//     //lv_list_set_options(ui_Contacts, "Contact", LV_list_MODE_NORMAL);
-//     lv_obj_set_width(ui_Contacts, 246);
-//     lv_obj_set_height(ui_Contacts, 400);
-//     lv_obj_set_x(ui_Contacts, -262);
-//     lv_obj_set_y(ui_Contacts, 0);
-//     lv_obj_set_align(ui_Contacts, LV_ALIGN_CENTER);
-
-//     ui_ContactMessages = lv_list_create(ui_TabPageContacts);
-//     //lv_list_set_options(ui_ContactMessages, "Contact", LV_list_MODE_NORMAL);
-//     lv_obj_set_width(ui_ContactMessages, 500);
-//     lv_obj_set_height(ui_ContactMessages, 400);
-//     lv_obj_set_x(ui_ContactMessages, 124);
-//     lv_obj_set_y(ui_ContactMessages, 0);
-//     lv_obj_set_align(ui_ContactMessages, LV_ALIGN_CENTER);
-//     lv_obj_set_style_bg_color(ui_ContactMessages, lv_color_hex(0), 0);
-
-//     ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Channels");
-
-//     ui_Channels = lv_dropdown_create(ui_TabPageChannels);
-//     lv_dropdown_set_options(ui_Channels, "Public");
-//     lv_obj_set_width(ui_Channels, 291);
-//     lv_obj_set_height(ui_Channels, LV_SIZE_CONTENT);    /// 1
-//     lv_obj_set_x(ui_Channels, -243);
-//     lv_obj_set_y(ui_Channels, -182);
-//     lv_obj_set_align(ui_Channels, LV_ALIGN_CENTER);
-//     lv_obj_add_flag(ui_Channels, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-
-
-
-//     ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
-//     //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
-//     lv_obj_set_width(ui_ChannelMessages, 780);
-//     lv_obj_set_height(ui_ChannelMessages, 342);
-//     lv_obj_set_x(ui_ChannelMessages, 0);
-//     lv_obj_set_y(ui_ChannelMessages, 30);
-//     lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
-//     lv_obj_set_flex_flow(ui_ChannelMessages, LV_FLEX_FLOW_COLUMN);
-//     lv_obj_set_style_pad_row(ui_ChannelMessages, 6, 0);
-//     lv_obj_set_style_pad_all(ui_ChannelMessages, 6, 0);
-//     lv_obj_set_flex_align(ui_ChannelMessages,
-//         LV_FLEX_ALIGN_START,
-//         LV_FLEX_ALIGN_START,
-//         LV_FLEX_ALIGN_START);
-
-
-//     ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
-
-//     ui_AutoLight = lv_checkbox_create(ui_TabPageSettings);
-//     lv_checkbox_set_text(ui_AutoLight, "Auto dim brightness");
-//     lv_obj_set_width(ui_AutoLight, LV_SIZE_CONTENT);   /// 1
-//     lv_obj_set_height(ui_AutoLight, LV_SIZE_CONTENT);    /// 1
-//     lv_obj_set_x(ui_AutoLight, -257);
-//     lv_obj_set_y(ui_AutoLight, -168);
-//     lv_obj_set_align(ui_AutoLight, LV_ALIGN_CENTER);
-//     lv_obj_add_flag(ui_AutoLight, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
-//     lv_obj_set_style_text_color(ui_AutoLight, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-//     lv_obj_set_style_text_opa(ui_AutoLight, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-//     lv_obj_add_event_cb(ui_AutoLight, ui_event_AutoLight, LV_EVENT_ALL, NULL);
-
-// }
-
-// void setNightMode(bool night) {
-
-//     if (!ui_DimOverlay) return;
-//     if (night) {
-//         lv_obj_set_style_bg_opa(ui_DimOverlay, 192, 0);  // 75% dark
-//     } else {
-//         lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);    // none
-//     }
-// }

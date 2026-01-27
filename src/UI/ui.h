@@ -29,28 +29,33 @@ extern "C" {
 // SCREEN: ui_Screen1
 void ui_Screen1_screen_init(void);
 void setNightMode(bool night);
-extern lv_obj_t * ui_Screen1;
-extern lv_obj_t * ui_TabView1;
-extern lv_obj_t * ui_TabPageContacts;
-extern lv_obj_t * ui_Contacts;
-extern lv_obj_t * ui_ContactMessages;
-extern lv_obj_t * ui_TabPageChannels;
-extern lv_obj_t * ui_Channels;
-extern lv_obj_t * ui_ChannelMessages;
-extern lv_obj_t * ui_TabPageSettings;
+extern lv_obj_t* ui_Screen1;
+extern lv_obj_t* ui_TabView1;
+extern lv_obj_t* ui_TabPageContacts;
+extern lv_obj_t* ui_Contacts;
+extern lv_obj_t* ui_ContactMessages;
+extern lv_obj_t* ui_TabPageChannels;
+extern lv_obj_t* ui_Channels;
+extern lv_obj_t* ui_ChannelMessages;
+extern lv_obj_t* ui_TabPageSettings;
 void ui_event_AutoLight(lv_event_t * e);
-extern lv_obj_t * ui_AutoLight;
-extern lv_obj_t * ui____initial_actions0;
+extern lv_obj_t* ui_AutoLight;
+extern lv_obj_t* ui____initial_actions0;
 
-extern lv_obj_t * ui_DimOverlay;
-extern lv_obj_t * ui_TabPageHome;
-extern lv_obj_t * ui_ValueDate;
-extern lv_obj_t * ui_ValueTime;
-extern lv_obj_t * ui_TabPageSettings;
-extern lv_obj_t * ui_DayLight;
+extern lv_obj_t* ui_DimOverlay;
+extern lv_obj_t* ui_TabPageHome;
+extern lv_obj_t* ui_ValueDate;
+extern lv_obj_t* ui_ValueTime;
+extern lv_obj_t* ui_TabPageSettings;
+extern lv_obj_t* ui_DayLight;
+extern lv_obj_t* ui_ChannelMessages;
+extern lv_obj_t* ui_ChannelInput;
+extern lv_obj_t* ui_SendBtn;
+extern lv_obj_t* ui_Keyboard;
+extern lv_obj_t* iu_SendLabel;
+extern lv_obj_t* ui_ChannelDivider;
 
 extern void onDayLightPressed(bool pressed);
-
 
 void ui_init(void);
 

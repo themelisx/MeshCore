@@ -410,7 +410,7 @@ protected:
     }
     Serial.printf("   %s\n", text);
 
-    // Μόνο public
+    // Only public?
     // if (strcmp(channel.secret, PUBLIC_GROUP_PSK) != 0)
     //      return;
 
