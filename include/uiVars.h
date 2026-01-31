@@ -15,9 +15,6 @@ extern TaskHandle_t t_core1_core;
 extern SemaphoreHandle_t semaphoreData;
 
 extern UIManager *uiManager;
-
-#ifdef USE_MAIN_TAB_VIEW
-    extern lv_obj_t * ui_MainTabView;
-#endif
+extern lv_obj_t * ui_MainTabView;
 
 #endif

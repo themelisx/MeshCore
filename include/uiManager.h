@@ -14,6 +14,7 @@ class UIManager {
     int windSpeedToBeaufort(float speed);
     void getInitials(const char *name, char *out);
     void formatLastSeen(uint32_t ts, char *out, size_t len);
+    void format_time(uint32_t ts, char *buf, size_t len);
     
     // Calendar days and months  
     static const char *days[7];

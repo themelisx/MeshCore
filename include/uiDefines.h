@@ -1,7 +1,6 @@
 #ifndef DEFINES_h
 #define DEFINES_h
 
-#include "uiConfiguration.h"
 
 #define BUTTONS_ON_SCREEN 7
 

@@ -22,6 +22,8 @@ const char *UIManager::months[12] = {"Jan", "Feb", "Mar", "Apr", "May", "Jun",
 
 #define TAG "UIManager"
 
+extern void handleCommand(char *msg);
+
 UIManager::UIManager() {
 
   tmp_buf = (char*)malloc(128);
@@ -34,6 +36,13 @@ UIManager::UIManager() {
   ui____initial_actions0 = lv_obj_create(NULL);
   lv_disp_load_scr(ui_Screen1);
 
+}
+
+void UIManager::format_time(uint32_t ts, char *buf, size_t len)
+{
+    time_t t = ts;
+    struct tm *tm_info = localtime(&t);
+    strftime(buf, len, "%H:%M:%S", tm_info);
 }
 
 void UIManager::format_datetime(char *buf, size_t size, const struct tm *timeinfo) {
@@ -499,15 +508,24 @@ static void s_onSendClick(lv_event_t *e)
 void UIManager::onSendClick(lv_event_t* e)
 {
     char fullMessage[260];
-    onHideKeyboard();
+    char msgCopy[200];
 
     const char* msg = lv_textarea_get_text(ui_ChannelInput);
-    if(msg == NULL || strlen(msg) == 0) return;
+    if(msg == NULL || msg[0] == '\0') return;
+
+    strncpy(msgCopy, msg, sizeof(msgCopy) - 1);
+    msgCopy[sizeof(msgCopy) - 1] = '\0';
 
     lv_textarea_set_text(ui_ChannelInput, "");
 
-    sprintf(fullMessage, "public %s", msg);
-    //handleCommand(fullMessage);
+    snprintf(fullMessage, sizeof(fullMessage), "public %s", msgCopy);
+    handleCommand(fullMessage);
+
+    char time_buf[16];
+    format_time(millis(), time_buf, sizeof(time_buf));
+    addChatBubble(time_buf, "Me", msgCopy, true);
+
+    onHideKeyboard();
 }
 
 static void s_onKeyboardEvent(lv_event_t *e)
@@ -684,9 +702,9 @@ void UIManager::ui_Screen1_screen_init(void)
     ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
     //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
     lv_obj_set_width(ui_ChannelMessages, 780);
-    lv_obj_set_height(ui_ChannelMessages, 260);
+    lv_obj_set_height(ui_ChannelMessages, 300);
     lv_obj_set_x(ui_ChannelMessages, 0);
-    lv_obj_set_y(ui_ChannelMessages, -40);
+    lv_obj_set_y(ui_ChannelMessages, 0);
     lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
     lv_obj_set_style_bg_color(ui_ChannelMessages, lv_color_hex(0), 0);
     lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, 0);

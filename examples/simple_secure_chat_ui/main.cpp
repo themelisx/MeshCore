@@ -166,8 +166,7 @@ void my_touchpad_read(lv_indev_drv_t *indev_driver, lv_indev_data_t *data)
 void initializeUI() {  
 
   Serial.println("initialize UI...");  
-  //ui_init_screen_events();
-
+  
   /*
   #ifdef ENABLE_STARTUP_LOGO
   lv_disp_load_scr(ui_ScreenLogo);  
@@ -181,8 +180,7 @@ void initializeUI() {
   #endif
   */
   uiManager = new UIManager();
-  uiManager->setNightMode(false);
-  
+  uiManager->setNightMode(false);  
 }
 
 void createSemaphores() {
@@ -296,6 +294,7 @@ class MyMesh : public BaseChatMesh, ContactVisitor {
         if (!success) break;  // write failed
       }
       file.close();
+      uiManager->addContactToUI(c);
     }
   }
 
@@ -828,6 +827,13 @@ void setup() {
   vTaskResume(t_core1_core);
 
   Serial.println("Setup completed");
+}
+
+void handleCommand(char *msg)
+{
+  Serial.println("Outgoing data:");
+  Serial.println(msg);
+  the_mesh.handleCommand(msg);
 }
 
 void core_task(void *pvParameters) {

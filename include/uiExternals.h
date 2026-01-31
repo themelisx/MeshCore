@@ -3,8 +3,6 @@
 
 #include <Arduino.h>
 
-#include "uiConfiguration.h"
-
 extern void createTasks();
 extern TaskHandle_t t_core0_lvgl;
 extern TaskHandle_t t_core1_clock;  
