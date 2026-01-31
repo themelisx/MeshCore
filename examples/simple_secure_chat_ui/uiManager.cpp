@@ -522,7 +522,11 @@ void UIManager::onSendClick(lv_event_t* e)
     handleCommand(fullMessage);
 
     char time_buf[16];
-    format_time(millis(), time_buf, sizeof(time_buf));
+    time_t now = time(NULL);
+    struct tm t;
+    localtime_r(&now, &t);
+
+    sprintf(time_buf, "%02d:%02d:%02d\n", t.tm_hour, t.tm_min, t.tm_sec);
     addChatBubble(time_buf, "Me", msgCopy, true);
 
     onHideKeyboard();
@@ -702,7 +706,7 @@ void UIManager::ui_Screen1_screen_init(void)
     ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
     //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
     lv_obj_set_width(ui_ChannelMessages, 780);
-    lv_obj_set_height(ui_ChannelMessages, 300);
+    lv_obj_set_height(ui_ChannelMessages, 280);
     lv_obj_set_x(ui_ChannelMessages, 0);
     lv_obj_set_y(ui_ChannelMessages, 0);
     lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
@@ -714,6 +718,7 @@ void UIManager::ui_Screen1_screen_init(void)
     //lv_obj_set_scrollbar_mode(ui_ChannelMessages, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, LV_PART_ITEMS);
     lv_obj_set_style_border_width(ui_ChannelMessages, 0, LV_PART_ITEMS);
+    lv_obj_set_style_pad_row(ui_ChannelMessages, 10, 0);
 
     ui_ChannelDivider = lv_obj_create(ui_TabPageChannels);
     lv_obj_set_size(ui_ChannelDivider, 780, 1);
