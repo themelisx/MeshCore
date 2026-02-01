@@ -209,6 +209,16 @@ struct NodePrefs {  // persisted to file
   uint8_t unused[3];
 };
 
+#ifndef FIRMWARE_BUILD_DATE
+  #define FIRMWARE_BUILD_DATE   "29 Jan 2026"
+#endif
+
+#ifndef FIRMWARE_VERSION
+  #define FIRMWARE_VERSION   "v1.12.0"
+#endif
+
+#define FIRMWARE_ROLE "Chat"
+
 class MyMesh : public BaseChatMesh, ContactVisitor {
   FILESYSTEM* _fs;
   NodePrefs _prefs;
@@ -425,7 +435,8 @@ protected:
 
   uint8_t onContactRequest(const ContactInfo& contact, uint32_t sender_timestamp, const uint8_t* data, uint8_t len, uint8_t* reply) override {
     MESH_DEBUG_PRINTLN("onContactRequest");
-    return 0;  // unknown
+    // TODO: Return telemetry data
+    return 0; // unknown
   }
 
   void onContactResponse(const ContactInfo& contact, const uint8_t* data, uint8_t len) override {
@@ -463,7 +474,10 @@ public:
     command[0] = 0;
     curr_recipient = NULL;
   }
-
+  const char* getFirmwareVer() { return FIRMWARE_VERSION; }
+  const char* getBuildDate() { return FIRMWARE_BUILD_DATE; }
+  const char* getRole() { return FIRMWARE_ROLE; }
+  const char* getNodeName() { return _prefs.node_name; }
   float getFreqPref() const { return _prefs.freq; }
   uint8_t getTxPowerPref() const { return _prefs.tx_power_dbm; }
 
@@ -827,6 +841,11 @@ void setup() {
   vTaskResume(t_core1_core);
 
   Serial.println("Setup completed");
+
+  Serial.print("MeshCore ");
+  Serial.println(the_mesh.getFirmwareVer());
+  Serial.print("Build date: ");
+  Serial.println(the_mesh.getBuildDate());
 }
 
 void handleCommand(char *msg)
