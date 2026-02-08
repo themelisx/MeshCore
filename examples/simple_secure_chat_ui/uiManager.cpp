@@ -5,6 +5,7 @@
 #include "uiVars.h"
 
 #include "uiManager.h"
+
 #include "../src/fonts/fonts.h"
 
 #include <helpers/ContactInfo.h>
@@ -223,33 +224,35 @@ void UIManager::addPrivateChatBubble(const char *time_str, const char *msg, bool
   lv_obj_set_style_pad_bottom(ui_ContactMessages, 20, 0);
 
   // 1. Row container
-  lv_obj_t *row = lv_obj_create(ui_ContactMessages);
-  lv_obj_set_width(row, lv_pct(100));
-  lv_obj_set_height(row, LV_SIZE_CONTENT);
-  lv_obj_set_style_bg_opa(row, 0, 0);
-  lv_obj_set_style_border_width(row, 0, 0);
-  lv_obj_set_style_pad_all(row, 4, 0);
-  lv_obj_clear_flag(row, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t* row = LvObj(ui_ContactMessages)
+    .width(lv_pct(100))
+    .height(LV_SIZE_CONTENT)
+    .bgOpa(0)
+    .border(0)
+    .padAll(4)
+    .scrollable(false)
+    .flexFlow(LV_FLEX_FLOW_ROW)
+    .flexAlign(
+        is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START,
+        LV_FLEX_ALIGN_START,
+        LV_FLEX_ALIGN_START
+    );
 
-  lv_obj_set_flex_flow(row, LV_FLEX_FLOW_ROW);
-  lv_obj_set_flex_align(row, 
-      is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START, 
-      LV_FLEX_ALIGN_START, 
-      LV_FLEX_ALIGN_START);
-
-  // 2. Aligner (Column) - Κρατάει το Label και την Ώρα
-  lv_obj_t *aligner = lv_obj_create(row);
-  lv_obj_set_width(aligner, LV_SIZE_CONTENT);
-  lv_obj_set_height(aligner, LV_SIZE_CONTENT);
-  lv_obj_set_style_bg_opa(aligner, 0, 0);
-  lv_obj_set_style_border_width(aligner, 0, 0);
-  lv_obj_set_style_pad_all(aligner, 0, 0);
-  lv_obj_set_flex_flow(aligner, LV_FLEX_FLOW_COLUMN);
-  lv_obj_set_flex_align(aligner, 
-      is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START, 
-      LV_FLEX_ALIGN_START, 
-      LV_FLEX_ALIGN_START);
-  lv_obj_set_style_pad_row(aligner, 4, 0);
+  // 2. Aligner (Column) - label and time
+    lv_obj_t* aligner = LvObj(row)
+        .width(LV_SIZE_CONTENT)
+        .height(LV_SIZE_CONTENT)
+        .bgOpa(0)
+        .border(0)
+        .padAll(0)
+        .scrollable(false)
+        .flexFlow(LV_FLEX_FLOW_ROW)
+        .flexAlign(
+            is_self ? LV_FLEX_ALIGN_END : LV_FLEX_ALIGN_START, 
+            LV_FLEX_ALIGN_START, 
+            LV_FLEX_ALIGN_START
+        );
+    lv_obj_set_style_pad_row(aligner, 4, 0);
 
   // 3. Το Label-Bubble (Ενοποιημένο)
   lv_obj_t *lbl_msg = lv_label_create(aligner);
@@ -355,133 +358,128 @@ void UIManager::handleContactClick(lv_event_t *e)
 
 void UIManager::addContactToUI(ContactInfo c)
 {
-    const int ROW_W = 200;
-    const int ROW_H = 64;
+    const int ROW_W  = 200;
+    const int ROW_H  = 64;
     const int AVATAR = 44;
-    const int PAD = 4;
+    const int PAD    = 4;
 
-    // Create list button row
-    lv_obj_t *btn = lv_list_add_btn(ui_Contacts, NULL, NULL);
-    lv_obj_set_size(btn, ROW_W, ROW_H);
-    lv_obj_set_style_pad_all(btn, 0, 0);
+    // ============================
+    // List row button
+    // ============================
+    lv_obj_t* btn = lv_list_add_btn(ui_Contacts, nullptr, nullptr);
+
+    LvObj(btn, true)
+        .size(ROW_W, ROW_H)
+        .padAll(0)
+        .bgColor(0x000000)
+        .bgOpa(LV_OPA_COVER)
+        .noDecor()
+        .border(1)
+        .scrollable(false);
+
     lv_obj_set_layout(btn, 0);
-
-    lv_obj_set_style_bg_color(btn, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(btn, LV_OPA_COVER, 0);
-
-    lv_obj_set_style_outline_width(btn, 0, 0);
-    lv_obj_set_style_shadow_width(btn, 0, 0);
     lv_obj_set_style_border_side(btn, LV_BORDER_SIDE_BOTTOM, 0);
     lv_obj_set_style_border_color(btn, lv_color_hex(0x222222), 0);
-    lv_obj_set_style_border_width(btn, 1, 0);
     lv_obj_set_style_bg_color(btn, lv_color_hex(0x111111), LV_STATE_PRESSED);
 
-    // Store pointer
-    ContactInfo *store = new ContactInfo(c);
+    // Store ContactInfo
+    auto* store = new ContactInfo(c);
     lv_obj_set_user_data(btn, store);
 
-    // Click handler
     lv_obj_add_event_cb(btn, onContactClick, LV_EVENT_CLICKED, this);
 
-    // Disable scrolling
-    lv_obj_clear_flag(btn, LV_OBJ_FLAG_SCROLLABLE);
-
     // ============================
-    // Avatar
+    // Avatar container
     // ============================
-    lv_obj_t *content = lv_obj_create(btn);
-    lv_obj_set_size(content, ROW_H, ROW_H);
-    lv_obj_set_pos(content, 0, 0);
-    lv_obj_set_style_bg_opa(content, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(content, 0, 0);
-    lv_obj_set_style_pad_all(content, 0, 0);
-    lv_obj_clear_flag(content, LV_OBJ_FLAG_SCROLLABLE);
+    lv_obj_t* content = LvObj(btn)
+        .size(ROW_H, ROW_H)
+        .position(0, 0)
+        .padAll(0)
+        .bgOpa(LV_OPA_TRANSP)
+        .border(0)
+        .scrollable(false)
+        .raw();
 
-    lv_obj_t *avatar = lv_obj_create(content);
-    lv_obj_set_size(avatar, AVATAR, AVATAR);
-    lv_obj_set_pos(avatar, 0, 10);
-    lv_obj_set_style_radius(avatar, LV_RADIUS_CIRCLE, 0);
-    lv_obj_set_style_bg_color(avatar, lv_color_hex(0x4A90E2), 0);
-    lv_obj_set_style_border_width(avatar, 0, 0);
+    // Avatar circle
+    lv_obj_t* avatar = LvObj(content)
+        .size(AVATAR, AVATAR)
+        .position(0, 10)
+        .radius(LV_RADIUS_CIRCLE)
+        .bgColor(0x4A90E2)
+        .border(0)
+        .raw();
 
+    // Initials
     char initials[4];
     if (c.type == ADV_TYPE_REPEATER) {
-      strcpy(initials, "(R)");
+        strcpy(initials, "(R)");
     } else {
-      getInitials(c.name, initials);
+        getInitials(c.name, initials);
     }
 
-    lv_obj_t *init_label = lv_label_create(avatar);
-    lv_label_set_text(init_label, initials);
-    lv_obj_center(init_label);
-    lv_obj_set_style_text_font(init_label, &lv_font_arial_22, 0);
-    lv_obj_set_style_text_color(init_label, lv_color_white(), 0);
+    LvLabel(avatar)
+        .text(initials)
+        .font(&lv_font_arial_22)
+        .textColor(0xFFFFFF)
+        .align(LV_ALIGN_CENTER);
 
     // ============================
-    // TEXT COLUMN (FIXED PIXELS)
+    // Text column
     // ============================
-    int text_x = PAD + AVATAR+ PAD;
+    int text_x = PAD + AVATAR + PAD;
     int text_w = ROW_W - text_x - PAD;
 
-    lv_obj_t *text_col = lv_obj_create(btn);
-    lv_obj_set_pos(text_col, text_x, 0);
-    lv_obj_set_size(text_col, text_w, ROW_H - PAD);
+    lv_obj_t* text_col = LvObj(btn)
+        .position(text_x, 0)
+        .size(text_w, ROW_H - PAD)
+        .padAll(0)
+        .bgOpa(LV_OPA_TRANSP)
+        .border(0)
+        .scrollable(false)
+        .raw();
 
-    lv_obj_set_style_bg_opa(text_col, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(text_col, 0, 0);
-    lv_obj_set_style_pad_all(text_col, 0, 0);
-    lv_obj_clear_flag(text_col, LV_OBJ_FLAG_SCROLLABLE);
+    // Name label
+    LvLabel(text_col)
+        .text(c.name)
+        .position(0, PAD + 4)
+        .width(text_w)
+        .font(&lv_font_arial_20)
+        .textColor(0xFFFFFF)
+        .wrap(false);
 
-    // ============================
-    // NAME LABEL (FIXED)
-    // ============================
-    lv_obj_t *name_label = lv_label_create(text_col);
-    lv_obj_set_pos(name_label, 0, PAD + 4);
-    lv_obj_set_width(name_label, text_w);
-
-    lv_label_set_text(name_label, c.name);
-    lv_label_set_long_mode(name_label, LV_LABEL_LONG_DOT);
-    lv_obj_set_style_text_font(name_label, &lv_font_arial_20, 0);
-    lv_obj_set_style_text_color(name_label, lv_color_white(), 0);
-
-    // ============================
-    // LAST SEEN LABEL (FIXED)
-    // ============================
+    // Last seen
     char lastSeen[32];
     formatLastSeen(c.lastmod, lastSeen, sizeof(lastSeen));
 
-    lv_obj_t *seen_label = lv_label_create(text_col);
-    lv_obj_set_pos(seen_label, 0, PAD + 32);
-    lv_obj_set_width(seen_label, text_w);
+    LvLabel(text_col)
+        .text(lastSeen)
+        .position(0, PAD + 32)
+        .width(text_w)
+        .font(&lv_font_arial_16)
+        .textColor(0x888888)
+        .wrap(false);
 
-    lv_label_set_text_fmt(seen_label, "%s", lastSeen);
-    lv_label_set_long_mode(seen_label, LV_LABEL_LONG_DOT);
-    lv_obj_set_style_text_font(seen_label, &lv_font_arial_16, 0);
-    lv_obj_set_style_text_color(seen_label, lv_color_hex(0x888888), 0);
-
-    lv_obj_clear_flag(avatar, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(text_col, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(name_label, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(seen_label, LV_OBJ_FLAG_CLICKABLE);
-
+    // ============================
+    // Disable child clicks
+    // ============================
+    LvObj(avatar, true).clickable(false);
+    LvObj(text_col, true).clickable(false);
 }
 
-void UIManager::onShowKeyboard() {
-    lv_obj_clear_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
-    //lv_obj_set_style_bg_opa(ui_DimOverlay, 160, 0);
-    lv_obj_add_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_obj_set_y(ui_ChannelInput, channelInputBaseKeybOnY);
-    lv_obj_set_y(ui_SendBtn, channelInputBaseKeybOnY);
+void UIManager::onShowKeyboard()
+{
+    LvKeyboard(ui_Keyboard, true).show(true);
+    LvObj(ui_DimOverlay, true).clickable(true);
+    LvObj(ui_ChannelInput, true).positionY(channelInputBaseKeybOnY);
+    LvObj(ui_SendBtn, true).positionY(channelInputBaseKeybOnY);
 }
 
-void UIManager::onHideKeyboard() {
-    lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
-    //lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);
-    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
-
-    lv_obj_set_y(ui_ChannelInput, channelInputBaseY);
-    lv_obj_set_y(ui_SendBtn, channelInputBaseY);
+void UIManager::onHideKeyboard()
+{
+    LvKeyboard(ui_Keyboard, true).show(false);
+    LvObj(ui_DimOverlay, true).clickable(false);
+    LvObj(ui_ChannelInput, true).positionY(channelInputBaseY);
+    LvObj(ui_SendBtn, true).positionY(channelInputBaseY);
 }
 
 static void s_onChannelInputFocus(lv_event_t *e)
@@ -544,16 +542,17 @@ void UIManager::onKeyboardEvent(lv_event_t* e)
 
     if(code == LV_EVENT_READY || code == LV_EVENT_CANCEL)
     {
-        lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
+        LvKeyboard(ui_Keyboard, true).show(false);
 
-        // Restore UI
-        lv_obj_set_y(ui_ChannelInput, channelInputBaseY);
-        lv_obj_set_y(ui_SendBtn, channelInputBaseY);
+        LvObj(ui_ChannelInput, true).positionY(channelInputBaseY);
+        LvObj(ui_SendBtn, true).positionY(channelInputBaseY);
 
-        lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);
-        lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
+        LvObj(ui_DimOverlay, true)
+            .bgOpa(0)
+            .clickable(false);
     }
 }
+
 
 static void s_onDimOverlayClick(lv_event_t *e)
 {
@@ -583,77 +582,82 @@ void UIManager::scroll_begin_event(lv_event_t *e)
 
 void UIManager::ui_Screen1_screen_init(void)
 {
-    ui_Screen1 = lv_obj_create(NULL);
-    lv_obj_clear_flag(ui_Screen1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_Screen1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_Screen1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
+    //ui_Screen1 = lv_obj_create(NULL);
 
-    ui_TabView1 = lv_tabview_create(ui_Screen1, LV_DIR_TOP, 50);
+    ui_Screen1 = LvObj(NULL)
+        .scrollable(false)
+        .bgColor(0x000000)
+        .bgOpa(255);
 
-    lv_obj_add_event_cb(lv_tabview_get_content(ui_TabView1), onScrollBeginEvent, LV_EVENT_SCROLL_BEGIN, this);
-    lv_obj_clear_flag(lv_tabview_get_content(ui_TabView1), LV_OBJ_FLAG_SCROLLABLE);
+    LvTabView tabView(ui_Screen1);
+    tabView
+        .size(800, 480)
+        .align(LV_ALIGN_CENTER)
+        .bgColor(0x000000)
+        .contentNoScroll()
+        .tabBtnBg(0x424242)
+        .tabBtnText(0xFFFFFF, &lv_font_arial_18);
 
-    lv_obj_set_width(ui_TabView1, 800);
-    lv_obj_set_height(ui_TabView1, 480);
-    lv_obj_set_align(ui_TabView1, LV_ALIGN_CENTER);
-    lv_obj_clear_flag(ui_TabView1, LV_OBJ_FLAG_SCROLLABLE);      /// Flags
-    lv_obj_set_style_bg_color(ui_TabView1, lv_color_hex(0x000000), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(ui_TabView1, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0x424242),
-                              LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_text_color(lv_tabview_get_tab_btns(ui_TabView1), lv_color_hex(0xFFFFFF),
-                                LV_PART_ITEMS | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(lv_tabview_get_tab_btns(ui_TabView1), 255,  LV_PART_ITEMS | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(lv_tabview_get_tab_btns(ui_TabView1), &lv_font_arial_18,
-                               LV_PART_ITEMS | LV_STATE_DEFAULT);
-
-    #if defined(LANG_EN)
-    ui_TabPageHome = lv_tabview_add_tab(ui_TabView1, "Home");
+    ui_TabView1 = tabView.raw();
+    
+    #if defined(LANG_EN) 
+        ui_TabPageHome = ui_TabView1.addTab("Home");           
+        ui_TabPageContacts = ui_TabView1.addTab("Contacts");
+        ui_TabPageChannels = ui_TabView1.addTab("Channels");
+        ui_TabPageSettings = ui_TabView1.addTab("Settings");        
     #elif defined(LANG_GR)
-    ui_TabPageHome = lv_tabview_add_tab(ui_TabView1, "Αρχική");
-    #endif   
+        ui_TabPageHome = tabView.addTab("Αρχική");           
+        ui_TabPageContacts = tabView.addTab("Επαφές");
+        ui_TabPageChannels = tabView.addTab("Κανάλια");
+        ui_TabPageSettings = tabView.addTab("Ρυθμίσεις");        
+    #endif 
 
-    ui_ValueDate = lv_label_create(ui_TabPageHome);
-    lv_obj_set_width(ui_ValueDate, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_ValueDate, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_ValueDate, 0);
-    lv_obj_set_y(ui_ValueDate, -165);
-    lv_obj_set_align(ui_ValueDate, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_ValueDate, "--- --/--/----");
-    lv_obj_set_style_text_color(ui_ValueDate, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_ValueDate, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_ValueDate, &lv_font_arial_40, LV_PART_MAIN | LV_STATE_DEFAULT);
+    LvObj(ui_TabPageHome)
+        .scrollable(false)
+        .bgOpa(0)
+        .bgColor(0x000000);
+    LvObj(ui_TabPageContacts)
+        .scrollable(false)
+        .bgOpa(0)
+        .bgColor(0x000000);
+    LvObj(ui_TabPageChannels)
+        .scrollable(false)
+        .bgOpa(0)
+        .bgColor(0x000000);
+    LvObj(ui_TabPageSettings)
+        .scrollable(false)
+        .bgOpa(0)
+        .bgColor(0x000000);
 
-    ui_ValueTime = lv_label_create(ui_TabPageHome);
-    lv_obj_set_width(ui_ValueTime, LV_SIZE_CONTENT);   /// 1
-    lv_obj_set_height(ui_ValueTime, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_ValueTime, 0);
-    lv_obj_set_y(ui_ValueTime, -100);
-    lv_obj_set_align(ui_ValueTime, LV_ALIGN_CENTER);
-    lv_label_set_text(ui_ValueTime, "--:--");
-    lv_obj_set_style_text_color(ui_ValueTime, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_opa(ui_ValueTime, 255, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_text_font(ui_ValueTime, &lv_font_arial_48, LV_PART_MAIN | LV_STATE_DEFAULT);
+    ui_ValueDate = LvLabel(ui_TabPageHome)
+        .text("--- --/--/----")
+        .width(LV_SIZE_CONTENT)
+        .height(LV_SIZE_CONTENT)
+        .font(&lv_font_arial_40)
+        .textColor(0xFFFFFF)
+        .opa(255)
+        .align(LV_ALIGN_CENTER)
+        .position(0, -165);
 
-    #if defined(LANG_EN)
-    ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Contacts");
-    #elif defined(LANG_GR)
-    ui_TabPageContacts = lv_tabview_add_tab(ui_TabView1, "Επαφές");    
-    #endif    
-    // Prevent scrolling
-    lv_obj_set_scrollbar_mode(ui_TabPageContacts, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_clear_flag(ui_TabPageContacts, LV_OBJ_FLAG_SCROLLABLE);
 
-    ui_Contacts = lv_list_create(ui_TabPageContacts);
-    //lv_list_set_options(ui_Contacts, "Contact", LV_list_MODE_NORMAL);
-    lv_obj_set_width(ui_Contacts, 250);
-    lv_obj_set_height(ui_Contacts, 400);
-    lv_obj_set_x(ui_Contacts, -274);
-    lv_obj_set_y(ui_Contacts, 0);
-    lv_obj_set_align(ui_Contacts, LV_ALIGN_CENTER);
+    ui_ValueTime = LvLabel(ui_TabPageHome)
+        .text("--:--")
+        .width(LV_SIZE_CONTENT)
+        .height(LV_SIZE_CONTENT)
+        .font(&lv_font_arial_48)
+        .textColor(0xFFFFFF)
+        .opa(255)
+        .align(LV_ALIGN_CENTER)
+        .position(0, -100);
+
+    ui_Contacts = LvList(ui_TabPageContacts)
+        .width(250)
+        .height(400)
+        .align(LV_ALIGN_CENTER)
+        .position(-274, 0)
+        .transparent()
+        .raw();
+
     lv_obj_set_style_bg_opa(ui_Contacts, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(ui_Contacts, 0, 0);
     lv_obj_set_style_outline_width(ui_Contacts, 0, 0);
@@ -662,13 +666,14 @@ void UIManager::ui_Screen1_screen_init(void)
     lv_obj_set_style_bg_opa(ui_Contacts, LV_OPA_TRANSP, LV_PART_ITEMS);
     lv_obj_set_style_border_width(ui_Contacts, 0, LV_PART_ITEMS);
 
-    ui_ContactMessages = lv_list_create(ui_TabPageContacts);
-    //lv_list_set_options(ui_ContactMessages, "Contact", LV_list_MODE_NORMAL);
-    lv_obj_set_width(ui_ContactMessages, 500);
-    lv_obj_set_height(ui_ContactMessages, 400);
-    lv_obj_set_x(ui_ContactMessages, 124);
-    lv_obj_set_y(ui_ContactMessages, 0);
-    lv_obj_set_align(ui_ContactMessages, LV_ALIGN_CENTER);
+    ui_ContactMessages = LvList(ui_TabPageContacts)
+        .width(500)
+        .height(400)
+        .align(LV_ALIGN_CENTER)
+        .position(124, 0)
+        .transparent()
+        .raw();
+
     lv_obj_set_style_bg_color(ui_ContactMessages, lv_color_hex(0), 0);
     lv_obj_set_style_bg_opa(ui_ContactMessages, LV_OPA_TRANSP, 0);
     lv_obj_set_style_border_width(ui_ContactMessages, 0, 0);
@@ -678,127 +683,103 @@ void UIManager::ui_Screen1_screen_init(void)
     lv_obj_set_style_bg_opa(ui_ContactMessages, LV_OPA_TRANSP, LV_PART_ITEMS);
     lv_obj_set_style_border_width(ui_ContactMessages, 0, LV_PART_ITEMS);
     
-    lv_obj_t *divider = lv_obj_create(ui_TabPageContacts);
-    lv_obj_set_size(divider, 2, 400);
-    lv_obj_set_pos(divider, 222, 0); // align between lists
-    lv_obj_set_style_bg_color(divider, lv_color_hex(0x444444), 0);
-    lv_obj_set_style_border_width(divider, 0, 0);
-    lv_obj_set_style_radius(divider, 0, 0);
+    // LvObj(ui_TabPageContacts)
+    //     .size(2, 400)
+    //     .position(222, 0)
+    //     .bgColor(0x444444)
+    //     .border(0)
+    //     .scrollable(false)
+    //     .radius(0);
 
-    #if defined(LANG_EN)
-    ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Channels");
-    #elif defined(LANG_GR)
-    ui_TabPageChannels = lv_tabview_add_tab(ui_TabView1, "Κανάλια");
-    #endif
-    lv_obj_set_scrollbar_mode(ui_TabPageChannels, LV_SCROLLBAR_MODE_OFF);
-    lv_obj_clear_flag(ui_TabPageChannels, LV_OBJ_FLAG_SCROLLABLE);
-    lv_obj_set_style_bg_color(ui_TabPageChannels, lv_color_hex(0x000000), 0);
+    ui_Channels = LvDropdown(ui_TabPageChannels)
+        .options("Public")
+        .width(291)
+        .align(LV_ALIGN_CENTER)
+        .position(-243, -182)
+        .clickable(true)
+        .raw();
 
-    ui_Channels = lv_dropdown_create(ui_TabPageChannels);
-    lv_dropdown_set_options(ui_Channels, "Public");
-    lv_obj_set_width(ui_Channels, 291);
-    lv_obj_set_height(ui_Channels, LV_SIZE_CONTENT);    /// 1
-    lv_obj_set_x(ui_Channels, -243);
-    lv_obj_set_y(ui_Channels, -182);
-    lv_obj_set_align(ui_Channels, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_Channels, LV_OBJ_FLAG_SCROLL_ON_FOCUS);     /// Flags
+    ui_ChannelMessages = LvList(ui_TabPageChannels)
+        .width(780)
+        .height(280)
+        .align(LV_ALIGN_CENTER)
+        .transparent()
+        .padRow(10)
+        .position(0, 0)
+        .bgColor(0)
+        .bgOpa(0)
+        .border(0)
+        .noDecor()
+        .raw();
 
-    ui_ChannelMessages = lv_list_create(ui_TabPageChannels);
-    //lv_list_set_options(ui_ChannelMessages, "Contact", LV_list_MODE_NORMAL);
-    lv_obj_set_width(ui_ChannelMessages, 780);
-    lv_obj_set_height(ui_ChannelMessages, 280);
-    lv_obj_set_x(ui_ChannelMessages, 0);
-    lv_obj_set_y(ui_ChannelMessages, 0);
-    lv_obj_set_align(ui_ChannelMessages, LV_ALIGN_CENTER);
-    lv_obj_set_style_bg_color(ui_ChannelMessages, lv_color_hex(0), 0);
-    lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, 0);
-    lv_obj_set_style_border_width(ui_ChannelMessages, 0, 0);
-    lv_obj_set_style_outline_width(ui_ChannelMessages, 0, 0);
-    lv_obj_set_style_shadow_width(ui_ChannelMessages, 0, 0);
     //lv_obj_set_scrollbar_mode(ui_ChannelMessages, LV_SCROLLBAR_MODE_OFF);
     lv_obj_set_style_bg_opa(ui_ChannelMessages, LV_OPA_TRANSP, LV_PART_ITEMS);
     lv_obj_set_style_border_width(ui_ChannelMessages, 0, LV_PART_ITEMS);
-    lv_obj_set_style_pad_row(ui_ChannelMessages, 10, 0);
 
-    ui_ChannelDivider = lv_obj_create(ui_TabPageChannels);
-    lv_obj_set_size(ui_ChannelDivider, 780, 1);
-    lv_obj_set_pos(ui_ChannelDivider, 0, 150);
-    lv_obj_set_align(ui_ChannelDivider, LV_ALIGN_CENTER);
-    lv_obj_set_style_bg_color(ui_ChannelDivider, lv_color_hex(0x444444), 0);
-    lv_obj_set_style_border_width(ui_ChannelDivider, 0, 0);
+    ui_ChannelDivider = LvObj(ui_TabPageChannels)
+        .size(780, 1)
+        .align(LV_ALIGN_CENTER)
+        .position(0, 150)
+        .bgColor(0x444444)
+        .border(0)
+        .raw();
 
-    #if defined(LANG_EN)
-    ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Settings");
-    #elif defined(LANG_GR)
-    ui_TabPageSettings = lv_tabview_add_tab(ui_TabView1, "Ρυθμίσεις");
-    #endif
-
-    ui_DimOverlay = lv_obj_create(ui_Screen1);
+    ui_DimOverlay = LvObj(ui_Screen1)
+        .size(lv_pct(100), lv_pct(100))
+        .align(LV_ALIGN_CENTER)
+        .bgColor(0x000000)
+        .bgOpa(0)
+        .bringToFront()
+        .onClick(s_onDimOverlayClick, this)
+        .scrollable(false)
+        .clickable(true)
+        .raw();
     lv_obj_remove_style_all(ui_DimOverlay);             // no border/padding
-    lv_obj_set_size(ui_DimOverlay, LV_PCT(100), LV_PCT(100));
-    lv_obj_set_align(ui_DimOverlay, LV_ALIGN_CENTER);
-    lv_obj_add_event_cb(ui_DimOverlay, s_onDimOverlayClick, LV_EVENT_CLICKED, this);
-
-    // black semi transparent background
-    lv_obj_set_style_bg_color(ui_DimOverlay, lv_color_hex(0x000000), 0);
-    lv_obj_set_style_bg_opa(ui_DimOverlay, 0, 0);       // initially "off"
-
-    //Edit text
-    ui_ChannelInput = lv_textarea_create(ui_TabPageChannels);
-    lv_obj_set_size(ui_ChannelInput, 670, 40);
-    lv_obj_set_pos(ui_ChannelInput, -50, channelInputBaseY);
-    lv_obj_set_align(ui_ChannelInput, LV_ALIGN_CENTER);
-    lv_obj_add_flag(ui_ChannelInput, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_add_flag(ui_ChannelInput, LV_OBJ_FLAG_SCROLL_ON_FOCUS);
-
-    #if defined(LANG_EN)
-    lv_textarea_set_placeholder_text(ui_ChannelInput, "Write message...");
-    #elif defined(LANG_GR)
-    lv_textarea_set_placeholder_text(ui_ChannelInput, "Γράψε μήνυμα...");
-    #endif    
-    lv_textarea_set_one_line(ui_ChannelInput, true);
-    lv_obj_set_style_text_font(ui_ChannelInput, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
-
-    lv_obj_set_style_bg_color(ui_ChannelInput, lv_color_hex(0x111111), 0);
-    lv_obj_set_style_text_color(ui_ChannelInput, lv_color_white(), 0);
-    lv_obj_set_style_border_color(ui_ChannelInput, lv_color_hex(0x444444), 0);
-    lv_obj_set_style_border_width(ui_ChannelInput, 1, 0);
-    lv_obj_set_style_radius(ui_ChannelInput, 6, 0);
-    lv_obj_add_event_cb(ui_ChannelInput, s_onChannelInputFocus, LV_EVENT_CLICKED, this);
-
-    // Send button
-    ui_SendBtn = lv_btn_create(ui_TabPageChannels);
-    lv_obj_set_size(ui_SendBtn, 90, 42);
-    lv_obj_set_pos(ui_SendBtn, 350, channelInputBaseY);
-    lv_obj_set_align(ui_SendBtn, LV_ALIGN_CENTER);
-    lv_obj_set_style_text_font(ui_SendBtn, &lv_font_arial_20, LV_PART_MAIN | LV_STATE_DEFAULT);
-    lv_obj_set_style_bg_color(ui_SendBtn, lv_color_hex(0x3A7AFE), 0);
-    lv_obj_add_event_cb(ui_SendBtn, s_onSendClick, LV_EVENT_CLICKED, this);
-
-    iu_SendLabel = lv_label_create(ui_SendBtn);
-    #if defined(LANG_EN)
-    lv_label_set_text(sendLabel, "Send");
-    #elif defined(LANG_GR)
-    lv_label_set_text(iu_SendLabel, "Αποστολή");
-    #endif    
-    lv_obj_center(iu_SendLabel);
-
-    // Keyboard
-    ui_Keyboard = lv_keyboard_create(lv_layer_top());
-    lv_obj_set_size(ui_Keyboard, 800, 200); 
-    lv_obj_set_align(ui_Keyboard, LV_ALIGN_BOTTOM_MID);
-    lv_obj_add_flag(ui_Keyboard, LV_OBJ_FLAG_HIDDEN);
-    lv_obj_add_event_cb(ui_Keyboard, s_onKeyboardEvent, LV_EVENT_ALL, this);
-
-    // Do not block touch/scroll
-    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_CLICKABLE);
-    lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLL_CHAIN_HOR);
     lv_obj_clear_flag(ui_DimOverlay, LV_OBJ_FLAG_SCROLL_CHAIN_VER);
 
-    // always in front
-    lv_obj_move_foreground(ui_DimOverlay);
 
+    ui_ChannelInput = LvTextArea(ui_TabPageChannels)
+        .size(670, 40)
+        .align(LV_ALIGN_CENTER)
+        .position(-50, channelInputBaseY)
+        .oneLine(true)
+        #if defined(LANG_EN)
+        .placeholder("Write message...")
+        #elif defined(LANG_GR)
+        .placeholder("Γράψε μήνυμα...")
+        #endif 
+        .font(&lv_font_arial_20)
+        .bgColor(0x111111)
+        .textColor(0xFFFFFF)
+        .borderColor(0x444444)
+        .borderWidth(1)
+        .radius(6)
+        .onFocus(s_onChannelInputFocus, this)
+        .raw();
+
+    ui_SendBtn = LvButton(ui_TabPageChannels)
+        .size(90, 42)
+        .align(LV_ALIGN_CENTER)
+        .position(350, channelInputBaseY)
+        .bgColor(0x3A7AFE)
+        .onClick(s_onSendClick, this)
+        .raw();
+
+    iu_SendLabel = LvLabel(ui_SendBtn)
+        #if defined(LANG_EN)
+        .text("Send")
+        #elif defined(LANG_GR)
+        .text("Αποστολή")        
+        #endif
+        .font(&lv_font_arial_18);
+    lv_obj_center(iu_SendLabel);
+
+    ui_Keyboard = LvKeyboard(lv_layer_top())
+        .size(800, 200)
+        .align(LV_ALIGN_BOTTOM_MID)
+        .show(false)
+        .onEvent(s_onKeyboardEvent, this);
 }
 
 void UIManager::setNightMode(bool night) {

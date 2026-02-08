@@ -1,13 +1,12 @@
-#include "lvBase.h"
-
-
 #ifndef LV_LABEL_h
 #define LV_LABEL_h
-class LvLabel : public LvBase {
+
+#include "lvBase.h"
+
+class LvLabel : public LvBase<LvLabel> {
 public:
-    explicit LvLabel(lv_obj_t* parent, const char* text = "") {
+    explicit LvLabel(lv_obj_t* parent) {
         obj = lv_label_create(parent);
-        lv_label_set_text(obj, text);
     }
 
     LvLabel& text(const char* t) {
@@ -38,4 +37,5 @@ public:
         return *this;
     }
 };
+
 #endif

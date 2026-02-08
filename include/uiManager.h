@@ -3,6 +3,16 @@
 
 #include <Arduino.h>
 #include "uiDefines.h"
+
+#include "lvButton.h"
+#include "lvDropDown.h"
+#include "lvKeyboard.h"
+#include "lvLabel.h"
+#include "lvList.h"
+#include "lvObj.h"
+#include "lvTabView.h"
+#include "lvTextArea.h"
+
 #include <helpers/ContactInfo.h>
 
 class UIManager {
